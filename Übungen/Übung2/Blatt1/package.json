@@ -1,0 +1,14 @@
+{
+  "name": "uebung2_blatt1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "mongo.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Rico Zieger",
+  "license": "ISC",
+  "dependencies": {
+    "mongodb": "^2.2.33"
+  }
+}
