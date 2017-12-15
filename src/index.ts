@@ -1,8 +1,8 @@
 import * as express from "express";
 import { Request, Response } from "express";
 import * as bodyParser from "body-parser";
-import { UserRoute } from "./routes/user/user";
-import { LoginRoute } from "./routes/login/login";
+import { UserRoute } from "./routes/user/user.route";
+import { LoginRoute } from "./routes/login/login.route";
 
 const app = express();
 app.use(bodyParser.json()); // support JSON-encoded bodies
@@ -20,5 +20,5 @@ userRoute.getRoutes();
 
 
 app.listen(3000, () => {
-    console.log('listening on port 3000');
+    console.log('Listening on port 3000');
 });
