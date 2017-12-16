@@ -16,17 +16,23 @@ export class LoginRoute implements Route {
             if (request.body.username != null && request.body.password != null) {
                 response.send(JSON.stringify(
                     {
-                        message: 'Login worked!'
+                        status: 'SUCCESS',
+                        data: {
+                            userId: 1234567,
+                            level: 'STUDENT'
+                        }
+                    }
+                ));
+            } else {
+                response.send(JSON.stringify(
+                    {
+                        status: 'FAILURE',
+                        data: {
+                            message: 'Login fehlgeschlagen'
+                        }
                     }
                 ));
             }
-
-            response.send(JSON.stringify(
-                {
-                    message: 'Login failed!'
-                }
-            ));
-
 
         });
     }
