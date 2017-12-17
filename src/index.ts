@@ -4,10 +4,9 @@ import * as bodyParser from "body-parser";
 import { UserRoute } from "./routes/user/user.route";
 import { LoginRoute } from "./routes/login/login.route";
 import { CourseRoute } from "./routes/course/course.route";
-import { config } from "../config";
 
-console.log('MongoDB', config.mongodb.ip, config.mongodb.port, config.mongodb.username, config.mongodb.password);
-console.log('MySQL', config.mysql.ip, config.mysql.port, config.mysql.username, config.mysql.password);
+console.log('MongoDB', process.env.MONGO_DB);
+console.log('MySQL', process.env.MY_SQL);
 
 const app = express();
 app.use(bodyParser.json()); // support JSON-encoded bodies
