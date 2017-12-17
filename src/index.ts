@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import * as bodyParser from "body-parser";
 import { UserRoute } from "./routes/user/user.route";
 import { LoginRoute } from "./routes/login/login.route";
+import { CourseRoute } from "./routes/course/course.route";
 
 const app = express();
 app.use(bodyParser.json()); // support JSON-encoded bodies
@@ -30,11 +31,9 @@ app.get('/', (request: Request, response: Response) => {
     response.send('{ "message" : "Hello World!" }');
 });
 
-const loginRoute = new LoginRoute(app);
-loginRoute.getRoutes();
-
-const userRoute = new UserRoute(app);
-userRoute.getRoutes();
+new LoginRoute(app).getRoutes();
+new UserRoute(app).getRoutes();
+new CourseRoute(app).getRoutes();
 
 
 app.listen(3000, () => {
