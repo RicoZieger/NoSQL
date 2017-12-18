@@ -19,7 +19,12 @@ export class LoginResult {
 }
 
 export class CourseResult {
-    constructor(public id: number, public name: string, public topics?: Topic[], public tests?: Test[]) {
+    constructor(public id: number, public name: string, public topics?: Topic[], public quizs?: Quiz[]) {
+    }
+}
+
+export class QuizeResult {
+    constructor(public id: number, public name: string, public questions: Question[]) {
     }
 }
 
@@ -28,7 +33,12 @@ export class Topic {
     }
 }
 
-export class Test {
+export class Question {
+    constructor(public id: number, public question: string, public answers: string[]) {
+    }
+}
+
+export class Quiz {
     constructor(public id: number, public name: string) {
     }
 }

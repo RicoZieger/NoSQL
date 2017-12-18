@@ -4,6 +4,7 @@ import * as bodyParser from "body-parser";
 import { UserRoute } from "./routes/user/user.route";
 import { LoginRoute } from "./routes/login/login.route";
 import { CourseRoute } from "./routes/course/course.route";
+import { QuizRoute } from "./routes/quiz/quiz.route";
 
 console.log('MongoDB', process.env.MONGO_DB);
 console.log('MySQL', process.env.MY_SQL);
@@ -37,6 +38,7 @@ app.get('/', (request: Request, response: Response) => {
 new LoginRoute(app).getRoutes();
 new UserRoute(app).getRoutes();
 new CourseRoute(app).getRoutes();
+new QuizRoute(app).getRoutes();
 
 
 app.listen(3000, () => {
