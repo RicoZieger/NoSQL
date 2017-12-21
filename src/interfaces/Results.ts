@@ -19,27 +19,27 @@ export class LoginResult {
 }
 
 export class CourseResult {
-    constructor(public id: number, public name: string, public topics?: Topic[], public quizs?: Quiz[]) {
+    constructor(public id: string, public name: string, public topics?: Topic[], public quizs?: Quiz[]) {
     }
 }
 
 export class QuizeResult {
-    constructor(public id: number, public name: string, public questions: Question[]) {
+    constructor(public id: string, public name: string, public questions: Question[]) {
     }
 }
 
 export class Topic {
-    constructor(public id: number, public name: string, public description: string, public files?: File[]) {
+    constructor(public id: string, public name: string, public description: string, public files?: File[]) {
     }
 }
 
 export class Question {
-    constructor(public id: number, public question: string, public answers: string[]) {
+    constructor(public id: string, public question: string, public answers: string[]) {
     }
 }
 
 export class Quiz {
-    constructor(public id: number, public name: string) {
+    constructor(public id: string, public name: string) {
     }
 }
 
