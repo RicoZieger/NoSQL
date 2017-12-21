@@ -17,49 +17,56 @@ export class LoginRoute implements Route {
             response.setHeader('Content-Type', 'application/json');
 
             var mariaDbConnection = new MariaDBConnector();
-            var mariaDbUserId;
-            mariaDbConnection.openDbConnection();
-            mariaDbConnection.getUserId(1, 'PasswortUser1').then(function (value) {
-              mariaDbUserId = value;
-              mariaDbConnection.closeDbConnection();
-              console.log("MariaDB User success.");
+            var mongoDbConnection = new MongoDBConnector();
 
-              var mongoDbConnection = new MongoDBConnector();
-              var mongoDbUser;
-              mongoDbConnection.openDbConnection();
-              mongoDbConnection.getUserByExternalId(mariaDbUserId).then(function(value){
-                mongoDbUser = value;
-                mongoDbConnection.closeDbConnection();
+            mariaDbConnection.openDbConnection().then(function(value){
+              console.log("username: "+request.body.username);
+              console.log("passwort: "+request.body.password);
+                  mariaDbConnection.getUserId(request.body.username, request.body.password).then(function (mariaDbUserId) {
+                  mariaDbConnection.closeDbConnection();
+                  console.log("Login in MariaDB erfolgreich.");
 
-                console.log("mongodb user success");
-                const message: Message = {
-                    status: Status.SUCCESS,
-                    data: LoginResult
-                };
-                message.data = new LoginResult(1234567, UserLevel.STUDENT);
-                response.send(JSON.stringify(message));
-              }, function(error){
-                console.log("mongodb user fail");
-                response.send(JSON.stringify(
-                    {
-                        status: 'FAILURE',
-                        data: {
-                            message: 'Interner Fehler - Konnte MariaDB User nicht zu MongoDB User zuordnen.'
-                        }
-                    }
-                ));
-              }),function(error){
-                console.log("mariadb user fail");
-                response.send(JSON.stringify(
-                  {
-                      status: 'FAILURE',
-                      data: {
-                          message: 'Login fehlgeschlagen'
-                      }
-                  }
-              ));
-              }
+                  mongoDbConnection.openDbConnection().then(function(value){
+                      mongoDbConnection.getUserByExternalId(mariaDbUserId).then(function(mongoDbUser){
+                          mongoDbConnection.closeDbConnection();
+                          console.log("Login in MongoDB erfolgreich.");
+
+                          var mongoUserId: int = mongoDbUser.Id;
+                          var mongoUserTyp: UserLevel = (mongoDbUser.UserTyp === "Student" ? UserLevel.STUDENT : UserLevel.PROFESSOR);
+                          LoginRoute.sendSuccessResponse(mongoUserId, mongoUserTyp, response);
+                      }, function(error){
+                          LoginRoute.sendFailureResponse("Login fehlgeschlagen - Konnte MariaDB User nicht zu MongoDB User zuordnen.", response);
+                      });
+                  }, function(error){
+                      LoginRoute.sendFailureResponse("Login fehlgeschlagen - Verbindungsfehler zur MongoDB.", response);
+                  });
+              },function(error){
+                 LoginRoute.sendFailureResponse("Login fehlgeschlagen - User existiert nicht in MariaDB", response);
+              });
+            },function(err){
+              LoginRoute.sendFailureResponse("Login fehlgeschlagen - Verbindungsfehler zur MariaDB", response);
             });
         });
+    }
+
+    static sendFailureResponse(failureMessage: string, response: Response):void {
+        console.log(failureMessage);
+        response.send(JSON.stringify(
+          {
+              status: 'FAILURE',
+              data: {
+                  message: failureMessage
+              }
+          }
+      ));
+    }
+
+    static sendSuccessResponse(id: int, userLevel: UserLevel, response: Response): void{
+      const message: Message = {
+          status: Status.SUCCESS,
+          data: LoginResult
+      };
+      message.data = new LoginResult(id, userLevel);
+      response.send(JSON.stringify(message));
     }
 }

@@ -7,12 +7,21 @@ export class MongoDBConnector{
       dbConnection: any = null;
 
       // Open the MongoDB connection.
-      public openDbConnection() {
+      public openDbConnection(): any {
+          var deferred = Q.defer();
+
           if (this.dbConnection == null) {
               mongo.connect(MongoDBConnector.url, (err, db) => {
-                  this.dbConnection = db.db("NoSQL_Moodle");
+                  if(err)
+                      return deferred.reject();
+                  else{
+                      this.dbConnection = db;
+                      return deferred.resolve(true);
+                  }                  
               });
           }
+
+          return deferred.promise;
       }
 
       // Close the existing connection.
@@ -26,9 +35,12 @@ export class MongoDBConnector{
       public getCourse(Id: string): any{
         var deferred = Q.defer();
 
-        this.dbConnection.collection('Kurs').find({_id:Id}).toArray(function(err, documents){
-		        this.dbConnection.close();
-            return deferred.resolve(documents[0]);
+        this.dbConnection.collection('Kurs').find({"_id":Id}).toArray(function(err, documents){
+		        if(err)
+                return deferred.reject();
+            else
+                return deferred.resolve(documents[0]);
+             this.dbConnection.close();
 	      });
 
         return deferred.promise;
@@ -37,9 +49,12 @@ export class MongoDBConnector{
       public getTheme(Id: string): any{
         var deferred = Q.defer();
 
-        this.dbConnection.collection('Thema').find({_id:Id}).toArray(function(err, documents){
-		        this.dbConnection.close();
-            return deferred.resolve(documents[0]);
+        this.dbConnection.collection('Thema').find({"_id":Id}).toArray(function(err, documents){
+		        if(err)
+                return deferred.reject();
+            else
+                return deferred.resolve(documents[0]);
+            this.dbConnection.close();
 	      });
 
         return deferred.promise;
@@ -48,9 +63,12 @@ export class MongoDBConnector{
       public getFileMetadata(Id: string): any{
         var deferred = Q.defer();
 
-        this.dbConnection.collection('Datei').find({_id:Id}).toArray(function(err, documents){
-		        this.dbConnection.close();
-            return deferred.resolve(documents[0]);
+        this.dbConnection.collection('Datei').find({"_id":Id}).toArray(function(err, documents){
+		        if(err)
+                return deferred.reject();
+            else
+                return deferred.resolve(documents[0]);
+            this.dbConnection.close();
 	      });
 
         return deferred.promise;
@@ -77,9 +95,12 @@ export class MongoDBConnector{
       public getTest(Id: string): any{
         var deferred = Q.defer();
 
-        this.dbConnection.collection('Test').find({_id:Id}).toArray(function(err, documents){
-		        this.dbConnection.close();
-            return deferred.resolve(documents[0]);
+        this.dbConnection.collection('Test').find({"_id":Id}).toArray(function(err, documents){
+            if(err)
+                return deferred.reject();
+            else
+                return deferred.resolve(documents[0]);
+            this.dbConnection.close();
 	      });
 
         return deferred.promise;
@@ -88,9 +109,12 @@ export class MongoDBConnector{
       public getQuestion(Id: string): any{
         var deferred = Q.defer();
 
-        this.dbConnection.collection('Frage').find({_id:Id}).toArray(function(err, documents){
-		        this.dbConnection.close();
-            return deferred.resolve(documents[0]);
+        this.dbConnection.collection('Frage').find({"_id":Id}).toArray(function(err, documents){
+		        if(err)
+                return deferred.reject();
+            else
+                return deferred.resolve(documents[0]);
+            this.dbConnection.close();
 	      });
 
         return deferred.promise;
@@ -99,9 +123,12 @@ export class MongoDBConnector{
       public getTestresult(Id: string): any{
         var deferred = Q.defer();
 
-        this.dbConnection.collection('Testergebnis').find({_id:Id}).toArray(function(err, documents){
-		        this.dbConnection.close();
-            return deferred.resolve(documents[0]);
+        this.dbConnection.collection('Testergebnis').find({"_id":Id}).toArray(function(err, documents){
+            if(err)
+                return deferred.reject();
+            else
+                return deferred.resolve(documents[0]);
+            this.dbConnection.close();
 	      });
 
         return deferred.promise;
@@ -110,24 +137,26 @@ export class MongoDBConnector{
       public getUserByInternalId(Id: string): any{
         var deferred = Q.defer();
 
-        this.dbConnection.collection('User').find({_id:Id}).toArray(function(err, documents){
-          console.log("Error: "+err);
-          console.log("Docs: "+documents);
-		        this.dbConnection.close();
-            return deferred.resolve(documents[0]);
+        this.dbConnection.collection('User').find({"_id":Id}).toArray(function(err, documents){
+            if(err)
+                return deferred.reject();
+            else
+                return deferred.resolve(documents[0]);
+            this.dbConnection.close();
 	      });
 
         return deferred.promise;
       }
 
-      public getUserByExternalId(Id: string): any{
+      public getUserByExternalId(Id: int): any{
         var deferred = Q.defer();
 
-        this.dbConnection.collection('User').find({"Id":"1"}).toArray(function(err, documents){
-          console.log("Error: "+err);
-          console.log("Docs: "+documents);
-		        this.dbConnection.close();
-            return deferred.resolve(documents[0]);
+        this.dbConnection.collection('User').find({"Id":Id}).toArray(function(err, documents){
+            if(err)
+                return deferred.reject();
+            else
+                return deferred.resolve(documents[0]);
+            this.dbConnection.close();
 	      });
 
         return deferred.promise;

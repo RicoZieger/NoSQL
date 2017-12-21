@@ -4,16 +4,23 @@ var Q = require("q");
 export class MariaDBConnector{
 
   static url: string = process.env.MY_SQL;
-  connection:any = null;  
+  connection:any = null;
 
   // Open the MongoDB connection.
   public openDbConnection() {
-      this.connection = mysql.createConnection(MariaDBConnector.url);
-      this.connection.connect(function(err) {
-        if (err) {
-          return;
-        }
-      });
+      var deferred = Q.defer();
+
+      if(this.connection == null){
+          this.connection = mysql.createConnection(MariaDBConnector.url);
+          this.connection.connect(function(err) {
+              if(err)
+                  return deferred.reject();
+              else
+                  return deferred.resolve(true);
+          });
+      }
+
+      return deferred.promise;
    }
 
   // Close the existing connection.
@@ -27,7 +34,7 @@ export class MariaDBConnector{
   public getUserId(Id: string, passwort: string): int{
     var deferred = Q.defer();
 
-    this.connection.query('SELECT Id FROM `User` WHERE `Id` = \"'+Id+'\" AND passwort = SHA1(\"'+passwort+'\");', function (error, results, fields) {
+    this.connection.query('SELECT Id FROM `User` WHERE `Id` = \"'+Id+'\" AND passwort = \"'+passwort+'\";', function (error, results, fields) {
       if(error || results.length === 0){
         return deferred.reject();
       }else{
