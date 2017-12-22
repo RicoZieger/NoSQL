@@ -19,15 +19,13 @@ export class LoginRoute implements Route {
             var mariaDbConnection = new MariaDBConnector();
             var mongoDbConnection = new MongoDBConnector();
 
-            mariaDbConnection.openDbConnection().then(function(value){              
-                  mariaDbConnection.getUserId(request.body.username, request.body.password).then(function (mariaDbUserId) {
+            mariaDbConnection.openDbConnection().then(function(value){
+                  mariaDbConnection.getUserId(request.body.username, request.body.password).then(function (mariaDbUserId) {                  
                   mariaDbConnection.closeDbConnection();
-                  console.log("Login in MariaDB erfolgreich.");
 
                   mongoDbConnection.openDbConnection().then(function(value){
                       mongoDbConnection.getUserByExternalId(mariaDbUserId).then(function(mongoDbUser){
                           mongoDbConnection.closeDbConnection();
-                          console.log("Login in MongoDB erfolgreich.");
 
                           var mongoUserId: int = mongoDbUser.Id;
                           var mongoUserTyp: UserLevel = (mongoDbUser.UserTyp === "Student" ? UserLevel.STUDENT : UserLevel.PROFESSOR);

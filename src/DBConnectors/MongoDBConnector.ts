@@ -161,4 +161,46 @@ export class MongoDBConnector{
 
         return deferred.promise;
       }
+
+      public getTopics(Ids: string[]):any {
+        var deferred = Q.defer();
+
+        this.dbConnection.collection('Thema').find({"_id": {$in : Ids}}).toArray(function(err, documents){
+            if(err)
+                return deferred.reject();
+            else
+                return deferred.resolve(documents);
+            this.dbConnection.close();
+	      });
+
+        return deferred.promise;
+      }
+
+      public getFilesMetadata(Ids: string[]):any {
+        var deferred = Q.defer();
+
+        this.dbConnection.collection('Datei').find({"_id": {$in : Ids}}).toArray(function(err, documents){
+            if(err)
+                return deferred.reject();
+            else
+                return deferred.resolve(documents);
+            this.dbConnection.close();
+	      });
+
+        return deferred.promise;
+      }
+
+      public getTests(Ids: string[]):any {
+        var deferred = Q.defer();
+
+        this.dbConnection.collection('Test').find({"_id": {$in : Ids}}).toArray(function(err, documents){
+            if(err)
+                return deferred.reject();
+            else
+                return deferred.resolve(documents);
+            this.dbConnection.close();
+	      });
+
+        return deferred.promise;
+      }
 }
