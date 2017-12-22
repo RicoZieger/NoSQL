@@ -23,6 +23,7 @@
     "@types/mongodb": "^2.2.18",
     "@types/mysql": "^2.15.2",
     "@types/node": "^8.5.2",
+    "@types/q": "^1.0.6",
     "nodemon": "^1.14.2",
     "ts-node": "^4.0.2",
     "typescript": "^2.6.2"
