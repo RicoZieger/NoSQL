@@ -1,13 +1,8 @@
 import { Route } from "../../interfaces/Route";
-import { Express, Request, Response } from "express";
+import { Request, Response } from "express";
 import { Message, Question, QuizeResult, Status } from "../../interfaces/Results";
 
-export class QuizRoute implements Route {
-    private app: Express;
-
-    constructor(expressApp: Express) {
-        this.app = expressApp;
-    }
+export class QuizRoute extends Route {
 
     getRoutes(): void {
         this.app.get('/user/:userId/course/:courseId/quiz/:quizId', (request: Request, response: Response) => {
@@ -19,10 +14,10 @@ export class QuizRoute implements Route {
 
             // TODO load real quiz from database
 
-            const quizeResult = new QuizeResult(456, 'Mock Quiz', [
-                new Question(1, 'Was ist dir richtige Antwort?', ['a', 'b', 'c']),
-                new Question(2, 'Was ist dir richtigere Antwort?', ['a', 'b', 'c', 'd']),
-                new Question(2, 'Was ist dir richtigste Antwort?', ['a', 'b', 'c', 'd', 'e'])
+            const quizeResult = new QuizeResult('456', 'Mock Quiz', [
+                new Question('1', 'Was ist dir richtige Antwort?', ['a', 'b', 'c']),
+                new Question('2', 'Was ist dir richtigere Antwort?', ['a', 'b', 'c', 'd']),
+                new Question('2', 'Was ist dir richtigste Antwort?', ['a', 'b', 'c', 'd', 'e'])
             ]);
 
             const message: Message = {

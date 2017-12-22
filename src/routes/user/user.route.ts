@@ -1,13 +1,7 @@
-import { Express, Request, Response } from "express";
+import { Request, Response } from "express";
 import { Route } from "../../interfaces/Route";
 
-export class UserRoute implements Route {
-
-    private app: Express;
-
-    constructor(expressApp: Express) {
-        this.app = expressApp;
-    }
+export class UserRoute extends Route {
 
     public getRoutes(): void {
         this.app.get('/user/', (request: Request, response: Response) => {
@@ -19,6 +13,5 @@ export class UserRoute implements Route {
             ));
         });
     }
-
 
 }

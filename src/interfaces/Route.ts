@@ -1,7 +1,11 @@
 import { Express } from "express";
 
-export interface Route {
-    constructor(expressApp: Express);
+export abstract class Route {
+    protected app: Express;
 
-    getRoutes(): void;
+    constructor(expressApp: Express) {
+        this.app = expressApp;
+    }
+
+    abstract getRoutes(): void;
 }

@@ -1,206 +1,119 @@
-var mongo = require('mongodb').MongoClient;
-var Q = require('q');
+import mongo = require('mongodb');
+import Q = require('q');
+import { ObjectID } from "bson";
 
-export class MongoDBConnector{
+export class MongoDBConnector {
 
-      static url: string = process.env.MONGO_DB;
-      dbConnection: any = null;
+    static url: string = process.env.MONGO_DB;
+    private dbConnection: mongo.Db;
 
-      // Open the MongoDB connection.
-      public openDbConnection(): any {
-          var deferred = Q.defer();
+    // Open the MongoDB connection.
+    public openDbConnection(): any {
+        const deferred = Q.defer();
 
-          if (this.dbConnection == null) {
-              mongo.connect(MongoDBConnector.url, (err, db) => {
-                  if(err)
-                      return deferred.reject();
-                  else{
-                      this.dbConnection = db;
-                      return deferred.resolve(true);
-                  }                  
-              });
-          }
-
-          return deferred.promise;
-      }
-
-      // Close the existing connection.
-      public closeDbConnection() {
-          if (this.dbConnection) {
-              this.dbConnection.close();
-              this.dbConnection = null;
-          }
-      }
-
-      public getCourse(Id: string): any{
-        var deferred = Q.defer();
-
-        this.dbConnection.collection('Kurs').find({"_id":Id}).toArray(function(err, documents){
-		        if(err)
-                return deferred.reject();
-            else
-                return deferred.resolve(documents[0]);
-             this.dbConnection.close();
-	      });
+        if (this.dbConnection == null) {
+            mongo.connect(MongoDBConnector.url, (error: mongo.MongoError, db: mongo.Db) => {
+                if (error) {
+                    return deferred.reject();
+                } else {
+                    this.dbConnection = db;
+                    return deferred.resolve(true);
+                }
+            });
+        }
 
         return deferred.promise;
-      }
+    }
 
-      public getTheme(Id: string): any{
-        var deferred = Q.defer();
-
-        this.dbConnection.collection('Thema').find({"_id":Id}).toArray(function(err, documents){
-		        if(err)
-                return deferred.reject();
-            else
-                return deferred.resolve(documents[0]);
+    // Close the existing connection.
+    public closeDbConnection() {
+        if (this.dbConnection) {
             this.dbConnection.close();
-	      });
+            this.dbConnection = null;
+        }
+    }
 
-        return deferred.promise;
-      }
+    //region one result
+    public getCourseById(Id: string): any {
+        return this.genericMongoDbGetter('Kurs', {'_id': Id});
+    }
 
-      public getFileMetadata(Id: string): any{
-        var deferred = Q.defer();
+    public getThemeById(Id: string): any {
+        return this.genericMongoDbGetter('Thema', {'_id': Id});
+    }
 
-        this.dbConnection.collection('Datei').find({"_id":Id}).toArray(function(err, documents){
-		        if(err)
+    public getFileMetadataById(Id: string): any {
+        return this.genericMongoDbGetter('Datei', {'_id': Id});
+    }
+
+    public getFileItself(Id: ObjectID): any {
+        const deferred = Q.defer();
+        const bucket = new mongo.GridFSBucket(this.dbConnection);
+        let file;
+
+        bucket
+            .openDownloadStream(Id)
+            .pipe(file)
+            .on('error', (error) => {
                 return deferred.reject();
-            else
-                return deferred.resolve(documents[0]);
-            this.dbConnection.close();
-	      });
+            })
+            .on('finish', () => {
+                console.log('done!');
+                return deferred.resolve(file);
+            });
 
         return deferred.promise;
-      }
+    }
 
-      public getFileItself(Id: string): any{
-        var deferred = Q.defer();
-        var bucket = new mongo.GridFSBucket(db);
-        var file;
+    public getTestbyId(Id: string): any {
+        return this.genericMongoDbGetter('Test', {'_id': Id});
+    }
 
-        bucket.openDownloadStream(Id).
-          pipe(file).
-          on('error', function(error) {
-            return deferred.reject();
-          }).
-          on('finish', function() {
-            console.log('done!');
-            return deferred.resolve(file);
-          });
+    public getQuestionById(Id: string): any {
+        return this.genericMongoDbGetter('Frage', {'_id': Id});
+    }
 
-        return deferred.promise;
-      }
+    public getTestresultById(Id: string): any {
+        return this.genericMongoDbGetter('Testergebnis', {'_id': Id});
+    }
 
-      public getTest(Id: string): any{
-        var deferred = Q.defer();
+    public getUserByExternalId(Id: number): any {
+        return this.genericMongoDbGetter('User', {'Id': Id});
+    }
 
-        this.dbConnection.collection('Test').find({"_id":Id}).toArray(function(err, documents){
-            if(err)
-                return deferred.reject();
-            else
-                return deferred.resolve(documents[0]);
-            this.dbConnection.close();
-	      });
+    //endregion
 
-        return deferred.promise;
-      }
+    //region multiple results
+    public getTopicsByIds(Ids: string[]): any {
+        return this.genericMongoDbGetter('Thema', {'_id': {$in: Ids}}, true);
+    }
 
-      public getQuestion(Id: string): any{
-        var deferred = Q.defer();
+    public getFilesMetadataByIds(Ids: string[]): any {
+        return this.genericMongoDbGetter('Datei', {'_id': {$in: Ids}}, true);
+    }
 
-        this.dbConnection.collection('Frage').find({"_id":Id}).toArray(function(err, documents){
-		        if(err)
-                return deferred.reject();
-            else
-                return deferred.resolve(documents[0]);
-            this.dbConnection.close();
-	      });
+    public getTestsByIds(Ids: string[]): any {
+        return this.genericMongoDbGetter('Test', {'_id': {$in: Ids}}, true);
+    }
 
-        return deferred.promise;
-      }
+    //endregion
 
-      public getTestresult(Id: string): any{
-        var deferred = Q.defer();
+    private genericMongoDbGetter(collectionName: string, query: any, allValues = false) {
+        const deferred = Q.defer();
 
-        this.dbConnection.collection('Testergebnis').find({"_id":Id}).toArray(function(err, documents){
-            if(err)
-                return deferred.reject();
-            else
-                return deferred.resolve(documents[0]);
-            this.dbConnection.close();
-	      });
+        this.dbConnection
+            .collection(collectionName)
+            .find(query)
+            .toArray((error: mongo.MongoError, documents: any[]) => {
+                // this.dbConnection.close();
+                if (error)
+                    return deferred.reject();
+                else
+                    return allValues ? deferred.resolve(documents) : deferred.resolve(documents[0]);
+
+            });
 
         return deferred.promise;
-      }
 
-      public getUserByInternalId(Id: string): any{
-        var deferred = Q.defer();
-
-        this.dbConnection.collection('User').find({"_id":Id}).toArray(function(err, documents){
-            if(err)
-                return deferred.reject();
-            else
-                return deferred.resolve(documents[0]);
-            this.dbConnection.close();
-	      });
-
-        return deferred.promise;
-      }
-
-      public getUserByExternalId(Id: int): any{
-        var deferred = Q.defer();
-
-        this.dbConnection.collection('User').find({"Id":Id}).toArray(function(err, documents){
-            if(err)
-                return deferred.reject();
-            else
-                return deferred.resolve(documents[0]);
-            this.dbConnection.close();
-	      });
-
-        return deferred.promise;
-      }
-
-      public getTopics(Ids: string[]):any {
-        var deferred = Q.defer();
-
-        this.dbConnection.collection('Thema').find({"_id": {$in : Ids}}).toArray(function(err, documents){
-            if(err)
-                return deferred.reject();
-            else
-                return deferred.resolve(documents);
-            this.dbConnection.close();
-	      });
-
-        return deferred.promise;
-      }
-
-      public getFilesMetadata(Ids: string[]):any {
-        var deferred = Q.defer();
-
-        this.dbConnection.collection('Datei').find({"_id": {$in : Ids}}).toArray(function(err, documents){
-            if(err)
-                return deferred.reject();
-            else
-                return deferred.resolve(documents);
-            this.dbConnection.close();
-	      });
-
-        return deferred.promise;
-      }
-
-      public getTests(Ids: string[]):any {
-        var deferred = Q.defer();
-
-        this.dbConnection.collection('Test').find({"_id": {$in : Ids}}).toArray(function(err, documents){
-            if(err)
-                return deferred.reject();
-            else
-                return deferred.resolve(documents);
-            this.dbConnection.close();
-	      });
-
-        return deferred.promise;
-      }
+    }
 }
