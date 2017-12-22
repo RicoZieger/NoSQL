@@ -3,6 +3,7 @@ import { Route } from "../../interfaces/Route";
 import { LoginResult, Message, Status, UserLevel } from "../../interfaces/Results";
 import { MariaDBConnector } from "../../DBConnectors/MariaDBConnector";
 import { MongoDBConnector } from "../../DBConnectors/MongoDBConnector";
+import mysql = require('mysql');
 
 export class LoginRoute extends Route {
 
@@ -10,27 +11,21 @@ export class LoginRoute extends Route {
         this.app.post('/login', (request: Request, response: Response) => {
             response.setHeader('Content-Type', 'application/json');
 
-            const mariaDbConnection = new MariaDBConnector();
+            const mariaDBConnector = new MariaDBConnector();
             const mongoDbConnection = new MongoDBConnector();
 
-            mariaDbConnection.openDbConnection()
-                .then(() => {
-                    mariaDbConnection.getUserId(request.body.username, request.body.password)
-                        .then((mariaDbUserId) => {
-                            mariaDbConnection.closeDbConnection();
-
-                            mongoDbConnection.openDbConnection()
-                                .then(() => {
-                                    this.getUserDataFromMongoDb(mongoDbConnection, mariaDbUserId, response);
-                                }, () => {
-                                    LoginRoute.sendFailureResponse("Login fehlgeschlagen - Verbindungsfehler zur MongoDB.", response);
-                                });
+            mariaDBConnector.getUserId(request.body.username, request.body.password, (mariaDbUserId: number, error?: mysql.MysqlError) => {
+                if (mariaDbUserId == null || error) {
+                    LoginRoute.sendFailureResponse("Login fehlgeschlagen - User existiert nicht in MariaDB", response);
+                } else {
+                    mongoDbConnection.openDbConnection()
+                        .then(() => {
+                            this.getUserDataFromMongoDb(mongoDbConnection, mariaDbUserId, response);
                         }, () => {
-                            LoginRoute.sendFailureResponse("Login fehlgeschlagen - User existiert nicht in MariaDB", response);
+                            LoginRoute.sendFailureResponse("Login fehlgeschlagen - Verbindungsfehler zur MongoDB.", response);
                         });
-                }, () => {
-                    LoginRoute.sendFailureResponse("Login fehlgeschlagen - Verbindungsfehler zur MariaDB", response);
-                });
+                }
+            });
         });
     }
 
