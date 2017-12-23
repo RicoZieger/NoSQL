@@ -18,6 +18,7 @@ export class MariaDBConnector {
                     } else {
                         callback(results[0].Id);
                     }
+                    connection.release();
                 })
             });
     }
