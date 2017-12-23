@@ -4,6 +4,7 @@ import { IThemaModel, mongoThema } from "../models/Thema";
 import { IDateiModel, mongoDatei } from "../models/Datei";
 import { IKursModel, mongoKurs } from "../models/Kurs";
 import { ITestModel, mongoTest } from "../models/Test";
+import { IFrageModel, mongoFrage} from "../models/Frage";
 
 export class MongoDBConnector {
 
@@ -35,6 +36,12 @@ export class MongoDBConnector {
         return promise;
     }
 
+    public static getTestById(Id: string): Promise<ITestModel>{
+        const query = mongoTest.findOne({'_id': Id});
+        const promise = query.exec();
+        return promise;
+    }
+
     public static getTopicsByIds(Ids: string[]): Promise<IThemaModel[]>{
         const query = mongoThema.find({'_id': {$in : Ids}});
         const promise = query.exec();
@@ -49,6 +56,12 @@ export class MongoDBConnector {
 
     public static getTestsByIds(Ids: string[]): Promise<ITestModel[]>{
         const query = mongoTest.find({'_id': {$in : Ids}});
+        const promise = query.exec();
+        return promise;
+    }
+
+    public static getQuestionsByIds(Ids: string[]): Promise<IFrageModel[]>{
+        const query = mongoFrage.find({'_id': {$in : Ids}});
         const promise = query.exec();
         return promise;
     }

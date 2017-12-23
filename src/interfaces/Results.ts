@@ -23,7 +23,7 @@ export class CourseResult {
     }
 }
 
-export class QuizeResult {
+export class QuizResult {
     constructor(public id: string, public name: string, public questions: Question[]) {
     }
 }
