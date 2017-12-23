@@ -10,7 +10,7 @@ export enum UserLevel {
 
 export interface Message {
     status: Status;
-    data: LoginResult | CourseResult;
+    data: LoginResult | CourseResult | QuizResult;
 }
 
 export class LoginResult {
@@ -23,7 +23,7 @@ export class CourseResult {
     }
 }
 
-export class QuizeResult {
+export class QuizResult {
     constructor(public id: string, public name: string, public questions: Question[]) {
     }
 }
@@ -44,6 +44,6 @@ export class Quiz {
 }
 
 export class File {
-    constructor(public id: number, public name: string, public link: string) {
+    constructor(public id: string, public name: string, public link: string) {
     }
 }

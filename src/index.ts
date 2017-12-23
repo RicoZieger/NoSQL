@@ -5,6 +5,8 @@ import { UserRoute } from "./routes/user/user.route";
 import { LoginRoute } from "./routes/login/login.route";
 import { CourseRoute } from "./routes/course/course.route";
 import { QuizRoute } from "./routes/quiz/quiz.route";
+import { MongoDBConnector } from "./DBConnectors/MongoDBConnector";
+import { MariaDBConnector } from "./DBConnectors/MariaDBConnector";
 
 console.log('MongoDB', process.env.MONGO_DB);
 console.log('MySQL', process.env.MY_SQL);
@@ -34,6 +36,10 @@ app.get('/', (request: Request, response: Response) => {
     response.setHeader('Content-Type', 'application/json');
     response.send('{ "message" : "Hello World!" }');
 });
+
+MariaDBConnector.setup();
+MongoDBConnector.setup();
+
 
 new LoginRoute(app).getRoutes();
 new UserRoute(app).getRoutes();

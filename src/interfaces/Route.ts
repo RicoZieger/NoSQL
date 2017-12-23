@@ -1,4 +1,6 @@
 import { Express } from "express";
+import { Response } from "express";
+import { Message, Status } from "../interfaces/Results";
 
 export abstract class Route {
     protected app: Express;
@@ -8,4 +10,24 @@ export abstract class Route {
     }
 
     abstract getRoutes(): void;
+
+    protected static sendFailureResponse(failureMessage: string, error: Error, response: Response): void {
+        console.log(error);
+        response.send(JSON.stringify(
+            {
+                status: Status.FAILURE,
+                data: {
+                    message: failureMessage
+                }
+            }
+        ));
+    }
+
+    protected static sendSuccessResponse(messageData: any, response: Response): void {
+        const message: Message = {
+            status: Status.SUCCESS,
+            data: messageData
+        };
+        response.send(JSON.stringify(message));
+    }
 }
