@@ -1,45 +1,30 @@
-import { Request, Response } from "express";
-import { Route } from "../../interfaces/Route";
+import { Express, Request, Response } from "express";
 import { LoginResult, Message, Status, UserLevel } from "../../interfaces/Results";
 import { MariaDBConnector } from "../../DBConnectors/MariaDBConnector";
 import { MongoDBConnector } from "../../DBConnectors/MongoDBConnector";
+import { IUserModel } from "../../models/User";
 import mysql = require('mysql');
 
-export class LoginRoute extends Route {
+export class LoginRoute {
 
-    public getRoutes(): void {
-        this.app.post('/login', (request: Request, response: Response) => {
+    public static getRoutes(app: Express): void {
+        app.post('/login', (request: Request, response: Response) => {
             response.setHeader('Content-Type', 'application/json');
 
-            const mariaDBConnector = new MariaDBConnector();
-            const mongoDbConnection = new MongoDBConnector();
-
-            mariaDBConnector.getUserId(request.body.username, request.body.password, (mariaDbUserId: number, error?: mysql.MysqlError) => {
+            MariaDBConnector.getUserId(request.body.username, request.body.password, (mariaDbUserId: number, error?: mysql.MysqlError) => {
                 if (mariaDbUserId == null || error) {
                     LoginRoute.sendFailureResponse("Login fehlgeschlagen - User existiert nicht in MariaDB", response);
                 } else {
-                    mongoDbConnection.openDbConnection()
-                        .then(() => {
-                            this.getUserDataFromMongoDb(mongoDbConnection, mariaDbUserId, response);
-                        }, () => {
-                            LoginRoute.sendFailureResponse("Login fehlgeschlagen - Verbindungsfehler zur MongoDB.", response);
-                        });
+                    MongoDBConnector.getUserByExternalId(1, (user: IUserModel, error?: any) => {
+                        if (user == null || error) {
+                            LoginRoute.sendFailureResponse("Login fehlgeschlagen - User existiert nicht in MongoDB", response);
+                        } else {
+                            LoginRoute.sendSuccessResponse(user.Id, user.UserTyp, response);
+                        }
+                    });
                 }
             });
         });
-    }
-
-    private getUserDataFromMongoDb(mongoDbConnection: MongoDBConnector, mariaDbUserId, response: Response) {
-        mongoDbConnection.getUserByExternalId(mariaDbUserId)
-            .then((mongoDbUser: any) => {
-                mongoDbConnection.closeDbConnection();
-
-                const mongoUserId = mongoDbUser.Id as number;
-                const mongoUserTyp = mongoDbUser.UserTyp as UserLevel;
-                LoginRoute.sendSuccessResponse(mongoUserId, mongoUserTyp, response);
-            }, () => {
-                LoginRoute.sendFailureResponse("Login fehlgeschlagen - Konnte MariaDB User nicht zu MongoDB User zuordnen.", response);
-            });
     }
 
     private static sendFailureResponse(failureMessage: string, response: Response): void {
