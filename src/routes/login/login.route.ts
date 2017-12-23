@@ -11,24 +11,18 @@ export class LoginRoute {
         app.post('/login', (request: Request, response: Response) => {
             response.setHeader('Content-Type', 'application/json');
 
-            MariaDBConnector.getUserId(request.body.username, request.body.password, (mariaDbUserId: number, error?: mysql.MysqlError) => {
-                if (mariaDbUserId == null || error) {
-                    LoginRoute.sendFailureResponse("Login fehlgeschlagen - User existiert nicht in MariaDB", response);
-                } else {
-                    MongoDBConnector.getUserByExternalId(1, (user: IUserModel, error?: any) => {
-                        if (user == null || error) {
-                            LoginRoute.sendFailureResponse("Login fehlgeschlagen - User existiert nicht in MongoDB", response);
-                        } else {
-                            LoginRoute.sendSuccessResponse(user.Id, user.UserTyp, response);
-                        }
-                    });
-                }
-            });
+            MariaDBConnector.getUserId(request.body.username, request.body.password)
+              .then(MongoDBConnector.getUserByExternalId)
+              .then(function(mongoUser){
+                  LoginRoute.sendSuccessResponse(mongoUser.Id, mongoUser.UserTyp, response);
+              }, function(err){
+                  LoginRoute.sendFailureResponse("Login fehlgeschlagen", err, response);
+              });
         });
-    }
+    }  
 
-    private static sendFailureResponse(failureMessage: string, response: Response): void {
-        console.log(failureMessage);
+    private static sendFailureResponse(failureMessage: string, error: Error, response: Response): void {
+        console.log(error);
         response.send(JSON.stringify(
             {
                 status: Status.FAILURE,

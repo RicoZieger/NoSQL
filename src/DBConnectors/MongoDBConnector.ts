@@ -1,5 +1,6 @@
 import * as mongoose from "mongoose";
 import { IUserModel, mongoUser } from "../models/User";
+import Q = require('q');
 
 export class MongoDBConnector {
 
@@ -19,14 +20,8 @@ export class MongoDBConnector {
     }
 
 
-    public static getUserByExternalId(Id: number, callback: (user: IUserModel, error?: any) => void) {
-        mongoUser.findOne({'Id': Id}, (error, user) => {
-            if (error || user == null) {
-                callback(null, error);
-            } else {
-                callback(user);
-            }
-        })
+    public static getUserByExternalId(Id: number): Promise<{}>{
+        return MongoDBConnector.genericMongoDbGetter('User', {'Id': Id});
     }
 
 
@@ -121,23 +116,21 @@ export class MongoDBConnector {
         }
 
         //endregion
-
-        private genericMongoDbGetter(collectionName: string, query: any, allValues = false) {
+*/
+        private static genericMongoDbGetter(collectionName: string, query: any, allValues = false): Promise<{}> {
             const deferred = Q.defer();
 
             this.dbConnection
                 .collection(collectionName)
                 .find(query)
                 .toArray((error: mongo.MongoError, documents: any[]) => {
-                    // this.dbConnection.close();
                     if (error)
                         return deferred.reject();
                     else
                         return allValues ? deferred.resolve(documents) : deferred.resolve(documents[0]);
-
                 });
 
             return deferred.promise;
 
-        }*/
+        }
 }
