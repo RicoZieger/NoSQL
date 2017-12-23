@@ -1,68 +1,43 @@
 import { Express, Request, Response } from "express";
-import { Route } from "../../interfaces/Route";
 import { LoginResult, Message, Status, UserLevel } from "../../interfaces/Results";
 import { MariaDBConnector } from "../../DBConnectors/MariaDBConnector";
 import { MongoDBConnector } from "../../DBConnectors/MongoDBConnector";
+import { IUserModel } from "../../models/User";
+import mysql = require('mysql');
 
-export class LoginRoute implements Route {
+export class LoginRoute {
 
-    private app: Express;
-
-    constructor(expressApp: Express) {
-        this.app = expressApp;
-    }
-
-    public getRoutes(): void {
-        this.app.post('/login', (request: Request, response: Response) => {
+    public static getRoutes(app: Express): void {
+        app.post('/login', (request: Request, response: Response) => {
             response.setHeader('Content-Type', 'application/json');
 
-            var mariaDbConnection = new MariaDBConnector();
-            var mongoDbConnection = new MongoDBConnector();
-
-            mariaDbConnection.openDbConnection().then(function(value){
-                  mariaDbConnection.getUserId(request.body.username, request.body.password).then(function (mariaDbUserId) {                  
-                  mariaDbConnection.closeDbConnection();
-
-                  mongoDbConnection.openDbConnection().then(function(value){
-                      mongoDbConnection.getUserByExternalId(mariaDbUserId).then(function(mongoDbUser){
-                          mongoDbConnection.closeDbConnection();
-
-                          var mongoUserId: int = mongoDbUser.Id;
-                          var mongoUserTyp: UserLevel = (mongoDbUser.UserTyp === "Student" ? UserLevel.STUDENT : UserLevel.PROFESSOR);
-                          LoginRoute.sendSuccessResponse(mongoUserId, mongoUserTyp, response);
-                      }, function(error){
-                          LoginRoute.sendFailureResponse("Login fehlgeschlagen - Konnte MariaDB User nicht zu MongoDB User zuordnen.", response);
-                      });
-                  }, function(error){
-                      LoginRoute.sendFailureResponse("Login fehlgeschlagen - Verbindungsfehler zur MongoDB.", response);
-                  });
-              },function(error){
-                 LoginRoute.sendFailureResponse("Login fehlgeschlagen - User existiert nicht in MariaDB", response);
+            MariaDBConnector.getUserId(request.body.username, request.body.password)
+              .then(MongoDBConnector.getUserByExternalId)
+              .then(function(user){
+                  LoginRoute.sendSuccessResponse(user.Id, user.UserTyp, response);
+              }, function(err){
+                  LoginRoute.sendFailureResponse("Login fehlgeschlagen", err, response);
               });
-            },function(err){
-              LoginRoute.sendFailureResponse("Login fehlgeschlagen - Verbindungsfehler zur MariaDB", response);
-            });
         });
     }
 
-    static sendFailureResponse(failureMessage: string, response: Response):void {
-        console.log(failureMessage);
+    private static sendFailureResponse(failureMessage: string, error: Error, response: Response): void {
+        console.log(error);
         response.send(JSON.stringify(
-          {
-              status: 'FAILURE',
-              data: {
-                  message: failureMessage
-              }
-          }
-      ));
+            {
+                status: Status.FAILURE,
+                data: {
+                    message: failureMessage
+                }
+            }
+        ));
     }
 
-    static sendSuccessResponse(id: int, userLevel: UserLevel, response: Response): void{
-      const message: Message = {
-          status: Status.SUCCESS,
-          data: LoginResult
-      };
-      message.data = new LoginResult(id, userLevel);
-      response.send(JSON.stringify(message));
+    private static sendSuccessResponse(id: number, userLevel: UserLevel, response: Response): void {
+        const message: Message = {
+            status: Status.SUCCESS,
+            data: new LoginResult(id, userLevel)
+        };
+        response.send(JSON.stringify(message));
     }
 }
