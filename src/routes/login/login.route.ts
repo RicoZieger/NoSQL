@@ -13,13 +13,13 @@ export class LoginRoute {
 
             MariaDBConnector.getUserId(request.body.username, request.body.password)
               .then(MongoDBConnector.getUserByExternalId)
-              .then(function(mongoUser){
-                  LoginRoute.sendSuccessResponse(mongoUser.Id, mongoUser.UserTyp, response);
+              .then(function(user){
+                  LoginRoute.sendSuccessResponse(user.Id, user.UserTyp, response);
               }, function(err){
                   LoginRoute.sendFailureResponse("Login fehlgeschlagen", err, response);
               });
         });
-    }  
+    }
 
     private static sendFailureResponse(failureMessage: string, error: Error, response: Response): void {
         console.log(error);

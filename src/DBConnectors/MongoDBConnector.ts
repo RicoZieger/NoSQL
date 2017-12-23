@@ -8,6 +8,7 @@ export class MongoDBConnector {
 
     public static setup() {
         mongoose.connect(process.env.MONGO_DB, {useMongoClient: true});
+        mongoose.Promise = require('q').Promise;
         this.dbConnection = mongoose.connection;
 
         this.dbConnection
@@ -17,13 +18,13 @@ export class MongoDBConnector {
             .on('error', (error) => {
                 console.log('MongoDB', error);
             });
-    }
-
+    }   
 
     public static getUserByExternalId(Id: number): Promise<{}>{
-        return MongoDBConnector.genericMongoDbGetter('User', {'Id': Id});
+        var query = mongoUser.findOne({'Id': Id});
+		    var promise = query.exec();
+		    return promise;
     }
-
 
     /*
         // Open the MongoDB connection.
