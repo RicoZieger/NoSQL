@@ -44,6 +44,6 @@ export class Quiz {
 }
 
 export class File {
-    constructor(public id: number, public name: string, public link: string) {
+    constructor(public id: string, public name: string, public link: string) {
     }
 }
