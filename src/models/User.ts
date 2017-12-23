@@ -7,7 +7,7 @@ export interface IUserModel extends Document {
     Id: number;
     UserTyp: UserLevel;
     Kurse: string[];
-    Testergebnisse: string[]
+    Testergebnisse: string[];
 }
 
 let userSchema = new mongoose.Schema({
