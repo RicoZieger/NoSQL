@@ -15,4 +15,4 @@ let frageSchema = new mongoose.Schema({
     KorrekteAntwortenIndex: [{type: Number}]
 });
 
-export const mongoUser: Model<IFrageModel> = mongoose.model<IFrageModel>('Frage', frageSchema, 'Frage');
+export const mongoFrage: Model<IFrageModel> = mongoose.model<IFrageModel>('Frage', frageSchema, 'Frage');

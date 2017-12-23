@@ -15,4 +15,4 @@ let kursSchema = new mongoose.Schema({
     Tests: [{type: String}]
 });
 
-export const mongoUser: Model<IKursModel> = mongoose.model<IKursModel>('Kurs', kursSchema, 'Kurs');
+export const mongoKurs: Model<IKursModel> = mongoose.model<IKursModel>('Kurs', kursSchema, 'Kurs');

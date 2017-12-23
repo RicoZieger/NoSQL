@@ -15,4 +15,4 @@ let dateiSchema = new mongoose.Schema({
     Ablaufdatum: {type: Date}
 });
 
-export const mongoUser: Model<IDateiModel> = mongoose.model<IDateiModel>('Datei', dateiSchema, 'Datei');
+export const mongoDatei: Model<IDateiModel> = mongoose.model<IDateiModel>('Datei', dateiSchema, 'Datei');
