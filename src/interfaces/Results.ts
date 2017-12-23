@@ -10,7 +10,7 @@ export enum UserLevel {
 
 export interface Message {
     status: Status;
-    data: LoginResult | CourseResult;
+    data: LoginResult | CourseResult | QuizResult;
 }
 
 export class LoginResult {

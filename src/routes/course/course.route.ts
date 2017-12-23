@@ -31,31 +31,12 @@ export class CourseRoute extends Route {
                 .then(function(files){
                     CourseRoute.files = files;
                     let result: CourseResult = CourseRoute.assembleCourseResult();
+                    console.log("Result = "+JSON.stringify(result));
                     CourseRoute.sendSuccessResponse(result, response);
                 }, function(err){
                     CourseRoute.sendFailureResponse("Fehler beim Laden des Kurses", err, response);
                 });
         });
-    }
-
-    private static sendFailureResponse(failureMessage: string, error: Error, response: Response): void {
-        console.log(error);
-        response.send(JSON.stringify(
-            {
-                status: Status.FAILURE,
-                data: {
-                    message: failureMessage
-                }
-            }
-        ));
-    }
-
-    private static sendSuccessResponse(result: CourseResult, response: Response): void {
-        const message: Message = {
-            status: Status.SUCCESS,
-            data: result
-        };
-        response.send(JSON.stringify(message));
     }
 
     private static assembleCourseResult(): CourseResult{

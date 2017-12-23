@@ -41,7 +41,7 @@ MariaDBConnector.setup();
 MongoDBConnector.setup();
 
 
-LoginRoute.getRoutes(app)
+new LoginRoute(app).getRoutes();
 new UserRoute(app).getRoutes();
 new CourseRoute(app).getRoutes();
 new QuizRoute(app).getRoutes();
