@@ -18,12 +18,12 @@ export class MongoDBConnector {
             .on('error', (error) => {
                 console.log('MongoDB', error);
             });
-    }   
+    }
 
-    public static getUserByExternalId(Id: number): Promise<{}>{
-        var query = mongoUser.findOne({'Id': Id});
-		    var promise = query.exec();
-		    return promise;
+    public static getUserByExternalId(Id: number): Promise<IUserModel>{
+        const query = mongoUser.findOne({'Id': Id});
+        const promise = query.exec();
+        return promise;
     }
 
     /*
