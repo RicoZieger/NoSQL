@@ -31,7 +31,6 @@ export class CourseRoute extends Route {
                 .then(function(files){
                     CourseRoute.files = files;
                     let result: CourseResult = CourseRoute.assembleCourseResult();
-                    console.log("Result = "+JSON.stringify(result));
                     CourseRoute.sendSuccessResponse(result, response);
                 }, function(err){
                     CourseRoute.sendFailureResponse("Fehler beim Laden des Kurses", err, response);
@@ -55,12 +54,12 @@ export class CourseRoute extends Route {
 
         for (let topicCounter = 0; topicCounter < courseTopics.length; topicCounter++) {
             const tmpTopic = new Topic(CourseRoute.topics[topicCounter]._id, CourseRoute.topics[topicCounter].Titel, CourseRoute.topics[topicCounter].Text);
-            const topicFiles: File[] = [];
+            const topicFiles: File[] = new Array();
             const thisTopicFileIds: string[] = CourseRoute.topics[topicCounter].Dateien;
 
             for (let fileCounter = 0; fileCounter < courseFiles.length; fileCounter++) {
-                for (let fileIdsCounter = 0; fileIdsCounter < thisTopicFileIds.length; fileIdsCounter++) {
-                    if (Number(thisTopicFileIds[fileIdsCounter]) === CourseRoute.files[fileCounter].id) {
+                for (let fileIdsCounter = 0; fileIdsCounter < thisTopicFileIds.length; fileIdsCounter++) {                
+                    if (thisTopicFileIds[fileIdsCounter] === CourseRoute.files[fileCounter].id) {
                         topicFiles.push(courseFiles[fileCounter]);
                         break;
                     }
