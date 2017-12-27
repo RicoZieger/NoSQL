@@ -33,7 +33,7 @@ export class QuizRoute extends Route {
         });
 
         this.app.post('/user/:userId/course/:courseId/quiz/quizId', (request: Request, response: Response) =>{
-            response.setHeader('Content-Type', 'application/json');        
+            response.setHeader('Content-Type', 'application/json');
 
             //TODO courseId kann hier entfallen, da der Test über seine Id ja schon eindeutig referenziert wird.
             const userId = request.params.userId;
@@ -126,7 +126,7 @@ export class QuizRoute extends Route {
                 return deferred.reject();
             });
 
-        return deferred.promise();
+        return deferred.promise;
     }
 
 }

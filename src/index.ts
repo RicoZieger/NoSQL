@@ -4,6 +4,7 @@ import * as bodyParser from "body-parser";
 import { UserRoute } from "./routes/user/user.route";
 import { LoginRoute } from "./routes/login/login.route";
 import { CourseRoute } from "./routes/course/course.route";
+import { DocumentRoute } from "./routes/documents/documents.route";
 import { QuizRoute } from "./routes/quiz/quiz.route";
 import { MongoDBConnector } from "./DBConnectors/MongoDBConnector";
 import { MariaDBConnector } from "./DBConnectors/MariaDBConnector";
@@ -45,6 +46,7 @@ new LoginRoute(app).getRoutes();
 new UserRoute(app).getRoutes();
 new CourseRoute(app).getRoutes();
 new QuizRoute(app).getRoutes();
+new DocumentRoute(app).getRoutes();
 
 
 app.listen(3000, () => {

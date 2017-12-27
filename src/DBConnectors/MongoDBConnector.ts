@@ -1,4 +1,6 @@
 import * as mongoose from "mongoose";
+import fs = require('fs');
+import Grid = require('gridfs-stream');
 import { IUserModel, mongoUser } from "../models/User";
 import { IThemaModel, mongoThema } from "../models/Thema";
 import { IDateiModel, mongoDatei } from "../models/Datei";
@@ -9,6 +11,7 @@ import { IFrageModel, mongoFrage} from "../models/Frage";
 export class MongoDBConnector {
 
     private static dbConnection: mongoose.Connection;
+    private static gfs;
 
     public static setup() {
         mongoose.connect(process.env.MONGO_DB, {useMongoClient: true});
@@ -16,7 +19,8 @@ export class MongoDBConnector {
         this.dbConnection = mongoose.connection;
 
         this.dbConnection
-            .once('open', () => {
+            .once('open', () => {  
+                MongoDBConnector.gfs = Grid(mongoose.connection.db, mongoose.mongo);
                 console.log('Connected to MongoDB');
             })
             .on('error', (error) => {
@@ -40,6 +44,22 @@ export class MongoDBConnector {
         const query = mongoTest.findOne({'_id': Id});
         const promise = query.exec();
         return promise;
+    }
+
+    public static getFileMetadataById(Id: string): Promise<IDateiModel[]>{
+        const query = mongoDatei.find({'_id': Id});
+        const promise = query.exec();
+        return promise;
+    }
+
+    public static getFileById(Id: string): any {
+        return MongoDBConnector.gfs.createReadStream({_id : Id});
+    }
+
+    public static saveFile(filename: string, filepath: string): any{
+        let writestream = MongoDBConnector.gfs.createWriteStream({filename: filename});
+        fs.createReadStream(filepath).pipe(writestream);
+        return writestream;
     }
 
     public static getTopicsByIds(Ids: string[]): Promise<IThemaModel[]>{

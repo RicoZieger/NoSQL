@@ -49,6 +49,7 @@ export class CourseRoute extends Route {
         }
 
         for (let fileCounter = 0; fileCounter < courseFiles.length; fileCounter++) {
+            //TODO dateien mit abgelaufener sichtbarkeit hier rausfiltern
             courseFiles[fileCounter] = new FileMetadata(CourseRoute.files[fileCounter]._id, CourseRoute.files[fileCounter].Titel, "FileLinkNotExistingYet");
         }
 
