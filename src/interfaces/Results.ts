@@ -10,7 +10,7 @@ export enum UserLevel {
 
 export interface Message {
     status: Status;
-    data: LoginResult | CourseResult | QuizResult;
+    data: LoginResult | CourseResult | Quiz;
 }
 
 export class LoginResult {
@@ -19,17 +19,27 @@ export class LoginResult {
 }
 
 export class CourseResult {
-    constructor(public id: string, public name: string, public topics?: Topic[], public quizs?: Quiz[]) {
-    }
-}
-
-export class QuizResult {
-    constructor(public id: string, public name: string, public questions: Question[]) {
+    constructor(public id: string, public name: string, public topics?: Topic[], public quizs?: QuizMetadata[]) {
     }
 }
 
 export class Topic {
-    constructor(public id: string, public name: string, public description: string, public files?: File[]) {
+    constructor(public id: string, public name: string, public description: string, public files?: FileMetadata[]) {
+    }
+}
+
+export class FileMetadata {
+    constructor(public id: string, public name: string, public link: string) {
+    }
+}
+
+export class QuizMetadata {
+    constructor(public id: string, public name: string) {
+    }
+}
+
+export class Quiz {
+    constructor(public id: string, public name: string, public questions: Question[]) {
     }
 }
 
@@ -38,12 +48,12 @@ export class Question {
     }
 }
 
-export class Quiz {
-    constructor(public id: string, public name: string) {
+export class QuizResult{
+    constructor(public quizId: string, public answers: UserAnswer[]){
     }
 }
 
-export class File {
-    constructor(public id: string, public name: string, public link: string) {
+export class UserAnswer{
+    constructor(public questionId: string, public givenAnswerIndizies: number[]){
     }
 }

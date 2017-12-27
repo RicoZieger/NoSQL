@@ -5,7 +5,7 @@ import { IThemaModel, mongoThema } from "../../models/Thema";
 import { IDateiModel, mongoDatei } from "../../models/Datei";
 import { IKursModel, mongoKurs } from "../../models/Kurs";
 import { ITestModel, mongoTest } from "../../models/Test";
-import { CourseResult, File, Message, Quiz, Status, Topic } from "../../interfaces/Results";
+import { CourseResult, FileMetadata, Message, QuizMetadata, Status, Topic } from "../../interfaces/Results";
 import { MongoDBConnector } from "../../DBConnectors/MongoDBConnector";
 
 export class CourseRoute extends Route {
@@ -41,24 +41,24 @@ export class CourseRoute extends Route {
     private static assembleCourseResult(): CourseResult{
         const courseResult: CourseResult = new CourseResult(CourseRoute.course._id, CourseRoute.course.Titel);
         const courseTopics: Topic[] = new Array(CourseRoute.topics.length);
-        const courseFiles: File[] = new Array(CourseRoute.files.length);
-        const courseTests: Quiz[] = new Array(CourseRoute.tests.length);
+        const courseFiles: FileMetadata[] = new Array(CourseRoute.files.length);
+        const courseTests: QuizMetadata[] = new Array(CourseRoute.tests.length);
 
         for (let quizCounter = 0; quizCounter < courseTests.length; quizCounter++) {
-            courseTests[quizCounter] = new Quiz(CourseRoute.tests[quizCounter]._id, CourseRoute.tests[quizCounter].Titel);
+            courseTests[quizCounter] = new QuizMetadata(CourseRoute.tests[quizCounter]._id, CourseRoute.tests[quizCounter].Titel);
         }
 
         for (let fileCounter = 0; fileCounter < courseFiles.length; fileCounter++) {
-            courseFiles[fileCounter] = new File(CourseRoute.files[fileCounter]._id, CourseRoute.files[fileCounter].Titel, "FileLinkNotExistingYet");
+            courseFiles[fileCounter] = new FileMetadata(CourseRoute.files[fileCounter]._id, CourseRoute.files[fileCounter].Titel, "FileLinkNotExistingYet");
         }
 
         for (let topicCounter = 0; topicCounter < courseTopics.length; topicCounter++) {
             const tmpTopic = new Topic(CourseRoute.topics[topicCounter]._id, CourseRoute.topics[topicCounter].Titel, CourseRoute.topics[topicCounter].Text);
-            const topicFiles: File[] = new Array();
+            const topicFiles: FileMetadata[] = new Array();
             const thisTopicFileIds: string[] = CourseRoute.topics[topicCounter].Dateien;
 
             for (let fileCounter = 0; fileCounter < courseFiles.length; fileCounter++) {
-                for (let fileIdsCounter = 0; fileIdsCounter < thisTopicFileIds.length; fileIdsCounter++) {                
+                for (let fileIdsCounter = 0; fileIdsCounter < thisTopicFileIds.length; fileIdsCounter++) {
                     if (thisTopicFileIds[fileIdsCounter] === CourseRoute.files[fileCounter].id) {
                         topicFiles.push(courseFiles[fileCounter]);
                         break;
