@@ -15,4 +15,4 @@ let testergebnisSchema = new mongoose.Schema({
     ZugehörigerUser: {type: String}
 });
 
-export const mongoTestergebnis: Model<ITestergebnisModel> = mongoose.model<ITestergebnisModel>('Testergebnis', testergebnisSchema, 'Testergebnis');
+export const MongoTestergebnis: Model<ITestergebnisModel> = mongoose.model<ITestergebnisModel>('Testergebnis', testergebnisSchema, 'Testergebnis');

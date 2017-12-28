@@ -6,13 +6,15 @@ export interface IDateiModel extends Document {
     Titel: string;
     Anfangsdatum: Date;
     Ablaufdatum: Date;
+    gridfsLink: string;
 }
 
 let dateiSchema = new mongoose.Schema({
     _id: {type: String},
     Titel: {type: String},
     Anfangsdatum: {type: Date},
-    Ablaufdatum: {type: Date}
+    Ablaufdatum: {type: Date},
+    gridfsLink: {type: String}
 });
 
-export const mongoDatei: Model<IDateiModel> = mongoose.model<IDateiModel>('Datei', dateiSchema, 'Datei');
+export const MongoDatei: Model<IDateiModel> = mongoose.model<IDateiModel>('Datei', dateiSchema, 'Datei');

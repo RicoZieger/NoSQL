@@ -1,12 +1,12 @@
 import * as mongoose from "mongoose";
 import fs = require('fs');
 import Grid = require('gridfs-stream');
-import { IUserModel, mongoUser } from "../models/User";
-import { IThemaModel, mongoThema } from "../models/Thema";
-import { IDateiModel, mongoDatei } from "../models/Datei";
-import { IKursModel, mongoKurs } from "../models/Kurs";
-import { ITestModel, mongoTest } from "../models/Test";
-import { IFrageModel, mongoFrage} from "../models/Frage";
+import { IUserModel, MongoUser } from "../models/User";
+import { IThemaModel, MongoThema } from "../models/Thema";
+import { IDateiModel, MongoDatei } from "../models/Datei";
+import { IKursModel, MongoKurs } from "../models/Kurs";
+import { ITestModel, MongoTest } from "../models/Test";
+import { IFrageModel, MongoFrage} from "../models/Frage";
 
 export class MongoDBConnector {
 
@@ -19,7 +19,7 @@ export class MongoDBConnector {
         this.dbConnection = mongoose.connection;
 
         this.dbConnection
-            .once('open', () => {  
+            .once('open', () => {
                 MongoDBConnector.gfs = Grid(mongoose.connection.db, mongoose.mongo);
                 console.log('Connected to MongoDB');
             })
@@ -29,25 +29,25 @@ export class MongoDBConnector {
     }
 
     public static getUserByExternalId(Id: number): Promise<IUserModel>{
-        const query = mongoUser.findOne({'Id': Id});
+        const query = MongoUser.findOne({'Id': Id});
         const promise = query.exec();
         return promise;
     }
 
     public static getCourseById(Id: string): Promise<IKursModel>{
-        const query = mongoKurs.findOne({'_id': Id});
+        const query = MongoKurs.findOne({'_id': Id});
         const promise = query.exec();
         return promise;
     }
 
     public static getTestById(Id: string): Promise<ITestModel>{
-        const query = mongoTest.findOne({'_id': Id});
+        const query = MongoTest.findOne({'_id': Id});
         const promise = query.exec();
         return promise;
     }
 
     public static getFileMetadataById(Id: string): Promise<IDateiModel[]>{
-        const query = mongoDatei.find({'_id': Id});
+        const query = MongoDatei.find({'_id': Id});
         const promise = query.exec();
         return promise;
     }
@@ -62,26 +62,32 @@ export class MongoDBConnector {
         return writestream;
     }
 
+    public static saveFileWithId(id: string, filename: string, filepath: string): any{
+        let writestream = MongoDBConnector.gfs.createWriteStream({_id: id, filename: filename});
+        fs.createReadStream(filepath).pipe(writestream);
+        return writestream;
+    }
+
     public static getTopicsByIds(Ids: string[]): Promise<IThemaModel[]>{
-        const query = mongoThema.find({'_id': {$in : Ids}});
+        const query = MongoThema.find({'_id': {$in : Ids}});
         const promise = query.exec();
         return promise;
     }
 
     public static getFilesMetadataByIds(Ids: string[]): Promise<IDateiModel[]>{
-        const query = mongoDatei.find({'_id': {$in : Ids}});
+        const query = MongoDatei.find({'_id': {$in : Ids}});
         const promise = query.exec();
         return promise;
     }
 
     public static getTestsByIds(Ids: string[]): Promise<ITestModel[]>{
-        const query = mongoTest.find({'_id': {$in : Ids}});
+        const query = MongoTest.find({'_id': {$in : Ids}});
         const promise = query.exec();
         return promise;
     }
 
     public static getQuestionsByIds(Ids: string[]): Promise<IFrageModel[]>{
-        const query = mongoFrage.find({'_id': {$in : Ids}});
+        const query = MongoFrage.find({'_id': {$in : Ids}});
         const promise = query.exec();
         return promise;
     }

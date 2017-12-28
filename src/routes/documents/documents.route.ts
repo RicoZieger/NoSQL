@@ -2,7 +2,7 @@ import { Route } from "../../interfaces/Route";
 import { Request, Response } from "express";
 import { Message, FileMetadata } from "../../interfaces/Results";
 import { MongoDBConnector } from "../../DBConnectors/MongoDBConnector";
-import { IDateiModel, mongoDatei} from "../../models/Datei";
+import { IDateiModel, MongoDatei} from "../../models/Datei";
 import mime = require('mime-types');
 import filesystem = require('fs');
 

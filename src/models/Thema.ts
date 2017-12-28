@@ -15,4 +15,4 @@ let themaSchema = new mongoose.Schema({
     Dateien: [{type: String}]
 });
 
-export const mongoThema: Model<IThemaModel> = mongoose.model<IThemaModel>('Thema', themaSchema, 'Thema');
+export const MongoThema: Model<IThemaModel> = mongoose.model<IThemaModel>('Thema', themaSchema, 'Thema');

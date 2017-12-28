@@ -1,12 +1,14 @@
 import { Route } from "../../interfaces/Route";
 import { Request, Response } from "express";
-import { IUserModel, mongoUser } from "../../models/User";
-import { IThemaModel, mongoThema } from "../../models/Thema";
-import { IDateiModel, mongoDatei } from "../../models/Datei";
-import { IKursModel, mongoKurs } from "../../models/Kurs";
-import { ITestModel, mongoTest } from "../../models/Test";
+import { IUserModel, MongoUser } from "../../models/User";
+import { IThemaModel, MongoThema } from "../../models/Thema";
+import { IDateiModel, MongoDatei } from "../../models/Datei";
+import { IKursModel, MongoKurs } from "../../models/Kurs";
+import { ITestModel, MongoTest } from "../../models/Test";
+import { IFrageModel, MongoFrage } from "../../models/Frage";
 import { CourseResult, FileMetadata, Message, QuizMetadata, Status, Topic } from "../../interfaces/Results";
 import { MongoDBConnector } from "../../DBConnectors/MongoDBConnector";
+import filesystem = require('fs');
 
 export class CourseRoute extends Route {
 
@@ -107,9 +109,117 @@ export class CourseRoute extends Route {
                 ]
             }
 
-            console.log("Create new course");
-
+            MongoDBConnector.getCourseById('KURS_'+data.courseName)
+                .then(function(result){
+                    if(result === null){
+                        //TODO Hier noch error handling? Alles zurück setzen, wenn ein Teil nicht angelegt werden kann?
+                        let newCourse = CourseRoute.createCourseRecursively(data);
+                        newCourse.save();
+                        CourseRoute.sendSuccessResponse("Kurs angelegt", response);
+                    }else{
+                        CourseRoute.sendFailureResponse("Ein Kurs mit diesem Namen existiert bereits", null, response);
+                    }
+                }, function(err){
+                    CourseRoute.sendFailureResponse("Fehler beim Abfragen der bestehenden Kurse", err, response);
+                });
         });
+    }
+
+    private static createCourseRecursively(courseData:any): IKursModel{        
+        let newCourse = new MongoKurs();
+        let topics: any[] = courseData.courseTopics;
+        let quizs: any[] = courseData.courseQuizs;
+
+        newCourse._id = 'KURS_'+courseData.courseName;
+        newCourse.Titel = courseData.courseName;
+        newCourse.Themen = [];
+        newCourse.Tests = [];
+
+        for(let i = 0; i < topics.length; i++){
+            newCourse.Themen.push(CourseRoute.createTopicRecursively(topics[i], newCourse._id)._id);
+        }
+        for(let i = 0; i < quizs.length; i++){
+            newCourse.Tests.push(CourseRoute.createQuizRecursively(quizs[i], newCourse._id)._id);
+        }
+
+        return newCourse;
+    }
+
+    private static createTopicRecursively(topicData: any, idPrefix: string): IThemaModel{
+        let newTopic = new MongoThema();
+        let files: any[] = topicData.files;
+
+        newTopic._id = idPrefix+'_'+topicData.topicName;
+        newTopic.Titel = topicData.topicName;
+        newTopic.Text = topicData.topicDescription;
+        newTopic.Dateien = [];
+        for(let i = 0; i < topicData.files.length; i++){
+            newTopic.Dateien.push(CourseRoute.createFileRecursively(topicData.files[i], newTopic._id)._id);
+        }
+
+        newTopic.save();
+        return newTopic;
+    }
+
+    private static createFileRecursively(fileData: any, idPrefix: string):IDateiModel{
+        let newFile = new MongoDatei();
+
+        newFile._id = idPrefix+'_'+fileData.fileName;
+        newFile.Titel = fileData.fileName;
+
+        fileData.visibilityStartDate === null ? newFile.Anfangsdatum = null :
+            newFile.Anfangsdatum = new Date(fileData.visibilityStartDate);
+        fileData.visibilityEndDate === null ? newFile.Ablaufdatum = null :
+            newFile.Ablaufdatum = new Date(fileData.visibilityEndDate);
+        newFile.gridfsLink = CourseRoute.saveFile(fileData.data, newFile.Titel, newFile._id);
+
+        newFile.save();
+        return newFile;
+    }
+
+    private static saveFile(file: any, filename: string, idPrefix: string): string{
+        const tmpFileName = "tmp_up_"+filename;
+        const id = idPrefix+'_ActualData';
+
+        filesystem.writeFile(tmpFileName, Buffer.from(file), function(err){
+            let fileStream = MongoDBConnector.saveFileWithId(id, filename, tmpFileName);
+            fileStream.on('close', function (file) {
+                filesystem.unlinkSync(tmpFileName);
+            });
+        });
+
+        return id;
+    }
+
+    private static createQuizRecursively(quizData: any, idPrefix: string): ITestModel{
+        let newQuiz = new MongoTest();
+
+        newQuiz._id = idPrefix+'_'+quizData.quizName;
+        newQuiz.Titel = quizData.quizName;
+        quizData.visibilityStartDate === null ? newQuiz.Anfangsdatum = null :
+            newQuiz.Anfangsdatum = new Date(quizData.visibilityStartDate);
+        quizData.visibilityEndDate === null ? newQuiz.Ablaufdatum = null :
+            newQuiz.Ablaufdatum = new Date(quizData.visibilityEndDate);
+        newQuiz.AbgeschlossenVon = [];
+        newQuiz.Fragen = [];
+        for(let i = 0; i < quizData.questions.length; i++){
+            newQuiz.Fragen.push(CourseRoute.createQuestionRecursively(quizData.questions[i], (newQuiz._id+'_Frage'+i))._id);
+        }
+
+        newQuiz.save();
+        return newQuiz;
+    }
+
+    private static createQuestionRecursively(questionData: any, id: string):IFrageModel{
+        let newQuestion = new MongoFrage();
+
+        newQuestion._id = id;
+        newQuestion.Fragetext = questionData.questionText;
+        newQuestion.Antworten = questionData.possibleAnwsers;
+        newQuestion.KorrekteAntwortenIndex = questionData.correctAnwsers;
+
+        newQuestion.save();
+        return newQuestion;
     }
 
     private static assembleCourseResult(): CourseResult{
