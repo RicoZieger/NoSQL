@@ -13,7 +13,7 @@ export abstract class Route {
 
     protected static sendFailureResponse(failureMessage: string, error: Error, response: Response): void {
         console.log(error);
-        response.send(JSON.stringify(
+        response.end(JSON.stringify(
             {
                 status: Status.FAILURE,
                 data: {
@@ -28,6 +28,6 @@ export abstract class Route {
             status: Status.SUCCESS,
             data: messageData
         };
-        response.send(JSON.stringify(message));
+        response.end(JSON.stringify(message));
     }
 }
