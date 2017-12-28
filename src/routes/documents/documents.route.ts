@@ -13,24 +13,24 @@ export class DocumentRoute extends Route {
         this.app.get('/file/:fileId', (request: Request, response: Response) => {
 
             //TODO Dateiname aus Metadaten einlesen
-            let mimetype = mime.lookup("TestDatei.txt");
+            let mimetype = mime.lookup("TestDatei.pdf");
             response.setHeader('Content-type', mimetype);
 
             const fileId = request.params.fileId;
             const fileStream = MongoDBConnector.getFileById(fileId);
             const tmpFileName = 'tmp_down_'+fileId;
-            let fileBuffer = "";
+            let data = [];
 
             fileStream.on('error', function (err) {
                 DocumentRoute.sendFailureResponse("Datei konnte nicht heruntergeladen werden", err, response);
             });
 
-            fileStream.on('data', function(data){
-                fileBuffer += JSON.parse(JSON.stringify(data)).data;
+            fileStream.on('data', function(chunk){
+                data.push(chunk);
             });
 
-            fileStream.on('end', function(value){
-                filesystem.writeFile(tmpFileName, Buffer.from(fileBuffer), function(err){
+            fileStream.on('end', function(){
+                filesystem.writeFile(tmpFileName, Buffer.concat(data), function(err){
                     if(err){
                         DocumentRoute.sendFailureResponse("Datei konnte zur Weiterverarbeitung nicht zwischengespeichert werden", err, response);
                     }else{
@@ -51,14 +51,14 @@ export class DocumentRoute extends Route {
             const upload = request.body;
             const filename = request.params.filename;
             const tmpFileName = "tmp_up_"+filename;
-            let fileBuffer = "";
+            let data = [];
 
-            request.on('data', function(data){
-                fileBuffer += JSON.parse(JSON.stringify(data)).data;
+            request.on('data', function(chunk){
+                data.push(chunk);
             });
 
-            request.on('end', function(value){
-                filesystem.writeFile(tmpFileName, Buffer.from(fileBuffer), function(err){
+            request.on('end', function(){                
+                filesystem.writeFile(tmpFileName, Buffer.concat(data), function(err){
                     if(err){
                         DocumentRoute.sendFailureResponse("Datei konnte zur Weiterverarbeitung nicht zwischengespeichert werden", err, response);
                     }else{
