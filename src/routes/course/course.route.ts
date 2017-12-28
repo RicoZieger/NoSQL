@@ -22,7 +22,7 @@ export class CourseRoute extends Route {
             //TODO: Kurse sind nicht vom Benutzer abhängig, die user id hat hier keinen Einfluss und kann entfallen.
             //(Wird aktuall auch nicht mehr verwendet)
             const userId = request.params.userId;
-            const courseId: string = "KURS_NOSQL";//request.params.courseId;
+            const courseId: string = request.params.courseId;
 
             MongoDBConnector.getCourseById(courseId)
                 .then(CourseRoute.getAllTestsOfCourse)
@@ -35,6 +35,80 @@ export class CourseRoute extends Route {
                 }, function(err){
                     CourseRoute.sendFailureResponse("Fehler beim Laden des Kurses", err, response);
                 });
+        });
+
+        this.app.post('/course', (request: Request, response: Response) =>{
+
+            //expected data schema from frontend
+            let data = {
+                'courseName': 'Mein neuer Kurs',
+                'courseTopics': [
+                    {
+                        'topicName':'Thema1',
+                        'topicDescription':'Beschreibung zu Thema1 in meinem neuen Kurs',
+                        'files':[
+                            {
+                                'fileName':'Wichtige Hinweise',
+                                'visibilityStartDate': '2016-05-18T16:00:00.000Z',
+                                'visibilityEndDate': '2018-05-18T16:00:00.000Z',
+                                'data':[
+                                    117,64,19,32,45,66,78,50
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        'topicName':'Thema2',
+                        'topicDescription':'Beschreibung zu Thema2 in meinem neuen Kurs',
+                        'files':[
+                            {
+                                'fileName':'So verdienen sie täglich 1000€',
+                                'visibilityStartDate': null,
+                                'visibilityEndDate': null,
+                                'data':[
+                                    117,64,19,32,45,66,78,50
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                'courseQuizs':[
+                    {
+                        'quizName':'Blamieren oder Kassieren (Quiz)',
+                        'visibilityStartDate': null,
+                        'visibilityEndDate': null,
+                        'questions':[
+                            {
+                                'questionText': 'Wie verdienen sie täglich 1000€?',
+                                'possibleAnwsers': [
+                                    'Ich',
+                                    'Weiß',
+                                    'es',
+                                    'nicht'
+                                ],
+                                'correctAnwsers':[
+                                    2,4
+                                ]
+                            },
+                            {
+                                'questionText': 'Warum fallen Menschen auf Trickbetrüger rein?',
+                                'possibleAnwsers': [
+                                    'Sie',
+                                    'wollen',
+                                    'reich',
+                                    'werden'
+                                ],
+                                'correctAnwsers':[
+                                    3
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+
+            console.log("Create new course");
+
         });
     }
 
