@@ -41,20 +41,29 @@ export class CourseRoute extends Route {
     private static assembleCourseResult(): CourseResult{
         const courseResult: CourseResult = new CourseResult(CourseRoute.course._id, CourseRoute.course.Titel);
         const courseTopics: Topic[] = new Array(CourseRoute.topics.length);
-        const courseFiles: FileMetadata[] = new Array(CourseRoute.files.length);
-        const courseTests: QuizMetadata[] = new Array(CourseRoute.tests.length);
+        const courseFiles: FileMetadata[] = [];
+        const courseTests: QuizMetadata[] = [];
+        let now: Date = new Date();
 
-        for (let quizCounter = 0; quizCounter < courseTests.length; quizCounter++) {
-            courseTests[quizCounter] = new QuizMetadata(CourseRoute.tests[quizCounter]._id, CourseRoute.tests[quizCounter].Titel);
+        for (let quizCounter = 0; quizCounter < CourseRoute.tests.length; quizCounter++) {
+            if(CourseRoute.isFileInVisibleNow(CourseRoute.tests[quizCounter].Anfangsdatum,
+                CourseRoute.tests[quizCounter].Ablaufdatum)){
+                courseTests.push(new QuizMetadata(CourseRoute.tests[quizCounter]._id,
+                    CourseRoute.tests[quizCounter].Titel));
+            }
         }
 
-        for (let fileCounter = 0; fileCounter < courseFiles.length; fileCounter++) {
-            //TODO dateien mit abgelaufener sichtbarkeit hier rausfiltern
-            courseFiles[fileCounter] = new FileMetadata(CourseRoute.files[fileCounter]._id, CourseRoute.files[fileCounter].Titel, "FileLinkNotExistingYet");
+        for (let fileCounter = 0; fileCounter < CourseRoute.files.length; fileCounter++) {
+            if(CourseRoute.isFileInVisibleNow(CourseRoute.files[fileCounter].Anfangsdatum,
+                CourseRoute.files[fileCounter].Ablaufdatum)){
+                courseFiles.push(new FileMetadata(CourseRoute.files[fileCounter]._id,
+                    CourseRoute.files[fileCounter].Titel, "FileLinkNotExistingYet"));
+            }
         }
 
         for (let topicCounter = 0; topicCounter < courseTopics.length; topicCounter++) {
-            const tmpTopic = new Topic(CourseRoute.topics[topicCounter]._id, CourseRoute.topics[topicCounter].Titel, CourseRoute.topics[topicCounter].Text);
+            const tmpTopic = new Topic(CourseRoute.topics[topicCounter]._id, CourseRoute.topics[topicCounter].Titel,
+                CourseRoute.topics[topicCounter].Text);
             const topicFiles: FileMetadata[] = new Array();
             const thisTopicFileIds: string[] = CourseRoute.topics[topicCounter].Dateien;
 
@@ -75,6 +84,13 @@ export class CourseRoute extends Route {
         courseResult.quizs = courseTests;
 
         return courseResult;
+    }
+
+    private static isFileInVisibleNow(visibilityStart: Date, visibilityEnd: Date): boolean{
+        let now: Date = new Date();
+
+        return ((visibilityStart === null && visibilityEnd === null) ||
+        ((visibilityStart <= now) && (visibilityEnd >= now)));
     }
 
     private static getAllTestsOfCourse(course: IKursModel): Promise<ITestModel[]>{
