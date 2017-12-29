@@ -5,6 +5,7 @@ import { IDateiModel, MongoDatei } from "../../models/Datei";
 import { IKursModel, MongoKurs } from "../../models/Kurs";
 import { ITestModel, MongoTest } from "../../models/Test";
 import { IFrageModel, MongoFrage } from "../../models/Frage";
+import { IUserModel, MongoUser } from "../../models/User";
 import { CourseResult, FileMetadata, QuizMetadata, Topic } from "../../interfaces/Results";
 import { MongoDBConnector } from "../../DBConnectors/MongoDBConnector";
 import filesystem = require('fs');
@@ -105,6 +106,9 @@ export class CourseRoute extends Route {
                             }
                         ]
                     }
+                ],
+                'courseParticipants' : [
+                    '1', '2', '5', '1420252', '1397856'
                 ]
             }
 
@@ -140,6 +144,8 @@ export class CourseRoute extends Route {
         for (let i = 0; i < quizs.length; i++) {
             newCourse.Tests.push(CourseRoute.createQuizRecursively(quizs[i], newCourse._id)._id);
         }
+        
+        CourseRoute.addCourseToUser(courseData);
 
         return newCourse;
     }
@@ -219,6 +225,15 @@ export class CourseRoute extends Route {
 
         newQuestion.save();
         return newQuestion;
+    }
+
+    private static addCourseToUser(courseData: any): void{
+        const courseId: string = 'KURS_'+courseData.courseName;
+
+        for(let i = 0; i < courseData.courseParticipants.length; i++){
+            let userId:string = courseData.courseParticipants[i];
+            MongoUser.findOneAndUpdate({_id: userId}, {$push:{Kurse: courseId}});
+        }
     }
 
     private static assembleCourseResult(): CourseResult {
