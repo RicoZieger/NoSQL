@@ -2,9 +2,9 @@ import { Route } from "../../interfaces/Route";
 import { Request, Response } from "express";
 import { Message, Question, Quiz, Status, QuizResult, UserAnswer } from "../../interfaces/Results";
 import { MongoDBConnector } from "../../DBConnectors/MongoDBConnector";
-import { ITestModel, mongoTest} from "../../models/Test";
-import { IFrageModel, mongoFrage} from "../../models/Frage";
-import { ITestergebnisModel, mongoTestergebnis} from "../../models/Testergebnis";
+import { ITestModel, MongoTest} from "../../models/Test";
+import { IFrageModel, MongoFrage} from "../../models/Frage";
+import { ITestergebnisModel, MongoTestergebnis} from "../../models/Testergebnis";
 
 export class QuizRoute extends Route {
 
@@ -78,7 +78,7 @@ export class QuizRoute extends Route {
     }
 
     private static assembleTestergebnisModel(quizResult: QuizResult, questions: IFrageModel[], userId: string): ITestergebnisModel{
-        let testergebnis: ITestergebnisModel;
+        let testergebnis = new MongoTestergebnis();
         let userPoints: number = 0;
 
         testergebnis._id = 'TESTERGEBNIS_'+quizResult.quizId+'_'+userId;
