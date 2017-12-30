@@ -1,10 +1,6 @@
 import { Request, Response } from "express";
 import { Route } from "../../interfaces/Route";
 import { MongoDBConnector } from "../../DBConnectors/MongoDBConnector";
-import { IKursModel } from "../../models/Kurs";
-import { IUserModel } from "../../models/User";
-import { ITestModel } from "../../models/Test";
-import { ITestergebnisModel } from "../../models/Testergebnis";
 
 export class DashboardRoute extends Route {
 
