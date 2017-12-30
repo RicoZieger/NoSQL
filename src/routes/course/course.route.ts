@@ -152,7 +152,6 @@ export class CourseRoute extends Route {
             deferred.resolve(null);
         }
         else if(user.UserTyp === UserLevel.STUDENT){
-            console.log("Kurs = "+user.Kurse[0]);
             MongoDBConnector.getCourseById(user.Kurse[0])
                 .then(CourseRoute.getAllTestsOfCourse)
                 .then(CourseRoute.getAllTopicsOfCourse)
@@ -161,7 +160,6 @@ export class CourseRoute extends Route {
                     CourseRoute.files = files;
                     deferred.resolve(CourseRoute.assembleCourseResult());
                 }, function (err) {
-                    console.log("Error: "+err);
                     deferred.reject();
                 });
         }else{
@@ -340,7 +338,6 @@ export class CourseRoute extends Route {
 
     private static getAllTestsOfCourse(course: IKursModel): Promise<ITestModel[]> {
         CourseRoute.course = course;
-        console.log("Kursobjekt = "+course);
         return MongoDBConnector.getTestsByIds(course.Tests);
     }
 
