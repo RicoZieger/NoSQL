@@ -25,7 +25,7 @@ export class CourseRoute extends Route {
             const userId = request.params.userId;
             const courseId: string = request.params.courseId;
 
-            MongoDBConnector.getCourseById(courseId)
+            MongoDBConnector.getCourseById('KURS_'+courseId)
                 .then(CourseRoute.getAllTestsOfCourse)
                 .then(CourseRoute.getAllTopicsOfCourse)
                 .then(CourseRoute.getAllFilesOfAllCourseTopics)
@@ -42,8 +42,7 @@ export class CourseRoute extends Route {
         //admins or students without a course yet
         this.app.get('/course/availableUsers', (request: Request, response: Response) => {
             MongoDBConnector.getAllAvailableUsers()
-                .then(function(user){
-                    console.log(JSON.stringify(user));
+                .then(function(user){                    
                     let result: JSON[] = [];
 
                     for(let i = 0; i < user.length; i++){
