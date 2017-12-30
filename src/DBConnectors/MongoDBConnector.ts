@@ -34,8 +34,13 @@ export class MongoDBConnector {
         return promise;
     }
 
+    public static getUserById(Id: string): Promise<IUserModel> {
+        const query = MongoUser.findOne({'_id': Id});
+        const promise = query.exec();
+        return promise;
+    }
+
     public static getCourseById(Id: string): Promise<IKursModel> {
-        console.log(Id);
         const query = MongoKurs.findOne({'_id': Id});
         const promise = query.exec();
         return promise;
@@ -47,8 +52,8 @@ export class MongoDBConnector {
         return promise;
     }
 
-    public static getFileMetadataById(Id: string): Promise<IDateiModel[]> {
-        const query = MongoDatei.find({'_id': Id});
+    public static getFileMetadataById(Id: string): Promise<IDateiModel> {
+        const query = MongoDatei.findOne({'_id': Id});
         const promise = query.exec();
         return promise;
     }
@@ -67,6 +72,12 @@ export class MongoDBConnector {
         let writestream = MongoDBConnector.gfs.createWriteStream({_id: id, filename: filename});
         fs.createReadStream(filepath).pipe(writestream);
         return writestream;
+    }
+
+    public static getCoursesByIds(Ids: string[]): Promise<IKursModel[]> {
+        const query = MongoKurs.find({'_id': {$in: Ids}});
+        const promise = query.exec();
+        return promise;
     }
 
     public static getTopicsByIds(Ids: string[]): Promise<IThemaModel[]> {

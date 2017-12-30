@@ -6,7 +6,7 @@ import { IKursModel, MongoKurs } from "../../models/Kurs";
 import { ITestModel, MongoTest } from "../../models/Test";
 import { IFrageModel, MongoFrage } from "../../models/Frage";
 import { IUserModel, MongoUser } from "../../models/User";
-import { CourseResult, FileMetadata, QuizMetadata, Topic } from "../../interfaces/Results";
+import { CourseResult, FileMetadata, QuizMetadata, Topic, UserLevel } from "../../interfaces/Results";
 import { MongoDBConnector } from "../../DBConnectors/MongoDBConnector";
 import filesystem = require('fs');
 
@@ -18,6 +18,7 @@ export class CourseRoute extends Route {
     private static files: IDateiModel[];
 
     getRoutes(): void {
+        //TODO mit der route /courses/user/:userId kann diese Route im Grunde komplett entfallen
         this.app.get('/user/:userId/course/:courseId', (request: Request, response: Response) => {
             response.setHeader('Content-Type', 'application/json');
 
@@ -36,6 +37,22 @@ export class CourseRoute extends Route {
                     CourseRoute.sendSuccessResponse(result, response);
                 }, function (err) {
                     CourseRoute.sendFailureResponse("Fehler beim Laden des Kurses", err, response);
+                });
+        });
+
+        //liefert null, falls Nutzer (Student und Prof) keinen Kurs haben
+        //liefert für Profs eine Liste mit ihren Kursen (nur die Namen, da ein Prof sonst nichts sieht)
+        //liefert für Studenten die Details ihres Kurses (ein Student hat nur einen Kurs, daher direkt die Detailseite laden)
+        this.app.get('/courses/user/:userId', (request: Request, response: Response) =>{
+            response.setHeader('Content-Type', 'application/json');
+
+            const userId: string = request.params.userId;
+            MongoDBConnector.getUserById(userId)
+                .then(CourseRoute.assembleUserCourses)
+                .then(function(result){
+                    CourseRoute.sendSuccessResponse(result, response);
+                }, function(err){
+                    CourseRoute.sendFailureResponse("Fehler bei der Kursabfrage", err, response);
                 });
         });
 
@@ -128,6 +145,36 @@ export class CourseRoute extends Route {
         });
     }
 
+    private static assembleUserCourses(user: IUserModel): Promise<CourseResult | string[]>{
+        const deferred = require('q').defer();
+
+        if(user.Kurse.length === 0){
+            deferred.resolve(null);
+        }
+        else if(user.UserTyp === UserLevel.STUDENT){
+            console.log("Kurs = "+user.Kurse[0]);
+            MongoDBConnector.getCourseById(user.Kurse[0])
+                .then(CourseRoute.getAllTestsOfCourse)
+                .then(CourseRoute.getAllTopicsOfCourse)
+                .then(CourseRoute.getAllFilesOfAllCourseTopics)
+                .then(function (files) {
+                    CourseRoute.files = files;
+                    deferred.resolve(CourseRoute.assembleCourseResult());
+                }, function (err) {
+                    console.log("Error: "+err);
+                    deferred.reject();
+                });
+        }else{
+            let kurse: string[] = [];
+            for(let i = 0; i < user.Kurse.length; i++){
+                kurse.push(user.Kurse[i].substr(5));
+            }
+            deferred.resolve(kurse);
+        }
+
+        return deferred.promise;
+    }
+
     private static createCourseRecursively(courseData: any): IKursModel {
         let newCourse = new MongoKurs();
         let topics: any[] = courseData.courseTopics;
@@ -144,7 +191,7 @@ export class CourseRoute extends Route {
         for (let i = 0; i < quizs.length; i++) {
             newCourse.Tests.push(CourseRoute.createQuizRecursively(quizs[i], newCourse._id)._id);
         }
-        
+
         CourseRoute.addCourseToUser(courseData);
 
         return newCourse;
@@ -293,6 +340,7 @@ export class CourseRoute extends Route {
 
     private static getAllTestsOfCourse(course: IKursModel): Promise<ITestModel[]> {
         CourseRoute.course = course;
+        console.log("Kursobjekt = "+course);
         return MongoDBConnector.getTestsByIds(course.Tests);
     }
 
