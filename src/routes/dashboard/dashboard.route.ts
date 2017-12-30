@@ -11,7 +11,7 @@ export class DashboardRoute extends Route {
     public getRoutes(): void {
         
         //returns the test results for all students in the given course/quiz)
-        this.app.get('/dashboard/course/:courseId/quiz/quiz:id', (request: Request, response: Response) => {
+        this.app.get('/dashboard/course/:courseId/quiz/:quizId', (request: Request, response: Response) => {
             response.setHeader('Content-Type', 'application/json');
 
             MongoDBConnector.getAllTestresultsOfTest(request.params.quizId)
