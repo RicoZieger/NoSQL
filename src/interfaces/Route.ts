@@ -12,8 +12,10 @@ export abstract class Route {
     abstract getRoutes(): void;
 
     protected static sendFailureResponse(failureMessage: string, error: Error, response: Response): void {
+        response.setHeader('Content-Type', 'application/json');
+
         console.log(error);
-        response.send(JSON.stringify(
+        response.end(JSON.stringify(
             {
                 status: Status.FAILURE,
                 data: {
@@ -24,10 +26,12 @@ export abstract class Route {
     }
 
     protected static sendSuccessResponse(messageData: any, response: Response): void {
+        response.setHeader('Content-Type', 'application/json');
+        
         const message: Message = {
             status: Status.SUCCESS,
             data: messageData
         };
-        response.send(JSON.stringify(message));
+        response.end(JSON.stringify(message));
     }
 }

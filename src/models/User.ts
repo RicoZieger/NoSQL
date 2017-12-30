@@ -18,4 +18,4 @@ let userSchema = new mongoose.Schema({
     Testergebnisse: [{type: String}]
 });
 
-export const mongoUser: Model<IUserModel> = mongoose.model<IUserModel>('User', userSchema, 'User');
+export const MongoUser: Model<IUserModel> = mongoose.model<IUserModel>('User', userSchema, 'User');

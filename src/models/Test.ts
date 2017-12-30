@@ -19,4 +19,4 @@ let testSchema = new mongoose.Schema({
     Fragen: [{type: String}]
 });
 
-export const mongoTest: Model<ITestModel> = mongoose.model<ITestModel>('Test', testSchema, 'Test');
+export const MongoTest: Model<ITestModel> = mongoose.model<ITestModel>('Test', testSchema, 'Test');
