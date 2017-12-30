@@ -13,8 +13,6 @@ export class QuizRoute extends Route {
 
     getRoutes(): void {
         this.app.get('/user/:userId/course/:courseId/quiz/:quizId', (request: Request, response: Response) => {
-            response.setHeader('Content-Type', 'application/json');
-
             //TODO userId und courseId können entfallen, da ein Test über seine Id eindeutig aufgefunden werden kann.
             //(beide Werte werden hier auch nicht verwendet)
             const userId = request.params.userId;
@@ -33,8 +31,6 @@ export class QuizRoute extends Route {
         });
 
         this.app.post('/user/:userId/course/:courseId/quiz/quizId', (request: Request, response: Response) =>{
-            response.setHeader('Content-Type', 'application/json');
-
             //TODO courseId kann hier entfallen, da der Test über seine Id ja schon eindeutig referenziert wird.
             const userId = request.params.userId;
             const courseId = request.params.courseId;

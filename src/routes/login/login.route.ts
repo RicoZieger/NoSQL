@@ -10,8 +10,6 @@ export class LoginRoute extends Route{
 
     getRoutes(): void {
         this.app.post('/login', (request: Request, response: Response) => {
-            response.setHeader('Content-Type', 'application/json');
-
             MariaDBConnector.getUserId(request.body.username, request.body.password)
               .then(MongoDBConnector.getUserByExternalId)
               .then(function(user){
@@ -20,7 +18,7 @@ export class LoginRoute extends Route{
                   LoginRoute.sendFailureResponse("Login fehlgeschlagen", err, response);
               });
         });
-    }    
+    }
 
     private static assembleLoginResult(user: IUserModel): LoginResult{
         return new LoginResult(user.Id, user.UserTyp);

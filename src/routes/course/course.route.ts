@@ -20,8 +20,6 @@ export class CourseRoute extends Route {
     getRoutes(): void {
         //TODO mit der route /courses/user/:userId kann diese Route im Grunde komplett entfallen
         this.app.get('/user/:userId/course/:courseId', (request: Request, response: Response) => {
-            response.setHeader('Content-Type', 'application/json');
-
             //TODO: Kurse sind nicht vom Benutzer abhängig, die user id hat hier keinen Einfluss und kann entfallen.
             //(Wird aktuall auch nicht mehr verwendet)
             const userId = request.params.userId;
@@ -43,8 +41,6 @@ export class CourseRoute extends Route {
         //returns a list of users (external and internal id) that can be added to a new course because they are either
         //admins or students without a course yet
         this.app.get('/course/availableUsers', (request: Request, response: Response) => {
-            response.setHeader('Content-Type', 'application/json');
-
             MongoDBConnector.getAllAvailableUsers()
                 .then(function(user){
                     console.log(JSON.stringify(user));
@@ -64,8 +60,6 @@ export class CourseRoute extends Route {
         //liefert für Profs eine Liste mit ihren Kursen (nur die Namen, da ein Prof sonst nichts sieht)
         //liefert für Studenten die Details ihres Kurses (ein Student hat nur einen Kurs, daher direkt die Detailseite laden)
         this.app.get('/courses/user/:userId', (request: Request, response: Response) =>{
-            response.setHeader('Content-Type', 'application/json');
-
             const userId: string = request.params.userId;
             MongoDBConnector.getUserById(userId)
                 .then(CourseRoute.assembleUserCourses)

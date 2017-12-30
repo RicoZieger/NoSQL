@@ -5,11 +5,9 @@ import { MongoDBConnector } from "../../DBConnectors/MongoDBConnector";
 export class DashboardRoute extends Route {
 
     public getRoutes(): void {
-        
-        //returns the test results for all students in the given course/quiz)
-        this.app.get('/dashboard/course/:courseId/quiz/:quizId', (request: Request, response: Response) => {
-            response.setHeader('Content-Type', 'application/json');
 
+        //returns the test results for all students in the given course/quiz)
+        this.app.get('/dashboard/course/:courseId/quiz/:quizId', (request: Request, response: Response) => { 
             MongoDBConnector.getAllTestresultsOfTest(request.params.quizId)
                 .then(function(testresults){
                     MongoDBConnector.getAllStudentsOfCourse(request.params.courseId)

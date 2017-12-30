@@ -45,9 +45,7 @@ export class DocumentRoute extends Route {
             });
         });
 
-        this.app.post('/file/:filename', (request: Request, response: Response) => {
-            response.setHeader('Content-Type', 'application/json');
-
+        this.app.post('/file/:filename', (request: Request, response: Response) => {            
             const upload = request.body;
             const filename = request.params.filename;
             const tmpFileName = "tmp_up_"+filename;
@@ -57,7 +55,7 @@ export class DocumentRoute extends Route {
                 data.push(chunk);
             });
 
-            request.on('end', function(){                
+            request.on('end', function(){
                 filesystem.writeFile(tmpFileName, Buffer.concat(data), function(err){
                     if(err){
                         DocumentRoute.sendFailureResponse("Datei konnte zur Weiterverarbeitung nicht zwischengespeichert werden", err, response);
