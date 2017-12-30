@@ -5,6 +5,7 @@ import { UserRoute } from "./routes/user/user.route";
 import { LoginRoute } from "./routes/login/login.route";
 import { CourseRoute } from "./routes/course/course.route";
 import { DocumentRoute } from "./routes/documents/documents.route";
+import { DashboardRoute } from "./routes/dashboard/dashboard.route";
 import { QuizRoute } from "./routes/quiz/quiz.route";
 import { MongoDBConnector } from "./DBConnectors/MongoDBConnector";
 import { MariaDBConnector } from "./DBConnectors/MariaDBConnector";
@@ -47,7 +48,7 @@ new UserRoute(app).getRoutes();
 new CourseRoute(app).getRoutes();
 new QuizRoute(app).getRoutes();
 new DocumentRoute(app).getRoutes();
-
+new DashboardRoute(app).getRoutes();
 
 app.listen(3000, () => {
     console.log('Listening on port 3000');

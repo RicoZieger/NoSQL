@@ -5,6 +5,7 @@ import { IDateiModel, MongoDatei } from "../models/Datei";
 import { IKursModel, MongoKurs } from "../models/Kurs";
 import { ITestModel, MongoTest } from "../models/Test";
 import { IFrageModel, MongoFrage } from "../models/Frage";
+import { ITestergebnisModel, MongoTestergebnis } from "../models/Testergebnis";
 import fs = require('fs');
 import Grid = require('gridfs-stream');
 
@@ -100,6 +101,18 @@ export class MongoDBConnector {
 
     public static getQuestionsByIds(Ids: string[]): Promise<IFrageModel[]> {
         const query = MongoFrage.find({'_id': {$in: Ids}});
+        const promise = query.exec();
+        return promise;
+    }
+
+    public static getAllStudentsOfCourse(Id: string): Promise<IUserModel[]> {
+        const query = MongoUser.find({'Kurse': Id, 'UserTyp': 'STUDENT'});
+        const promise = query.exec();
+        return promise;
+    }
+
+    public static getAllTestresultsOfTest(testId: string): Promise<ITestergebnisModel[]> {
+        const query = MongoTestergebnis.find({'ZugehörigerTest': testId});
         const promise = query.exec();
         return promise;
     }
