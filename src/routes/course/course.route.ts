@@ -40,6 +40,26 @@ export class CourseRoute extends Route {
                 });
         });
 
+        //returns a list of users (external and internal id) that can be added to a new course because they are either
+        //admins or students without a course yet
+        this.app.get('/course/availableUsers', (request: Request, response: Response) => {
+            response.setHeader('Content-Type', 'application/json');
+
+            MongoDBConnector.getAllAvailableUsers()
+                .then(function(user){
+                    console.log(JSON.stringify(user));
+                    let result: JSON[] = [];
+
+                    for(let i = 0; i < user.length; i++){
+                        result.push(JSON.parse(JSON.stringify({Id: user[i].Id, _id: user[i]._id})));
+                    }
+
+                    CourseRoute.sendSuccessResponse(result, response);
+                }, function(err){
+                    CourseRoute.sendFailureResponse("Fehler beim Ermitteln der verfügbaren Nutzer", err, response);
+                });
+        });
+
         //liefert null, falls Nutzer (Student und Prof) keinen Kurs haben
         //liefert für Profs eine Liste mit ihren Kursen (nur die Namen, da ein Prof sonst nichts sieht)
         //liefert für Studenten die Details ihres Kurses (ein Student hat nur einen Kurs, daher direkt die Detailseite laden)

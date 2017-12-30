@@ -117,4 +117,10 @@ export class MongoDBConnector {
         return promise;
     }
 
+    public static getAllAvailableUsers(): Promise<IUserModel[]> {
+        const query = MongoUser.find({$where:'this.Kurse.length<1'})
+        const promise = query.exec();
+        return promise;
+    }
+
 }
