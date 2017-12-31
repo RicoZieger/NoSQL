@@ -1,3 +1,4 @@
+import { myAuthenticate } from './utils/passport';
 import * as express from "express";
 import { Request, Response } from "express";
 import * as bodyParser from "body-parser";
@@ -8,6 +9,7 @@ import { DocumentRoute } from "./routes/documents/documents.route";
 import { QuizRoute } from "./routes/quiz/quiz.route";
 import { MongoDBConnector } from "./DBConnectors/MongoDBConnector";
 import { MariaDBConnector } from "./DBConnectors/MariaDBConnector";
+import * as passport from 'passport';
 
 console.log('MongoDB', process.env.MONGO_DB);
 console.log('MySQL', process.env.MY_SQL);
@@ -37,6 +39,9 @@ app.get('/', (request: Request, response: Response) => {
     response.setHeader('Content-Type', 'application/json');
     response.send('{ "message" : "Hello World!" }');
 });
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 MariaDBConnector.setup();
 MongoDBConnector.setup();

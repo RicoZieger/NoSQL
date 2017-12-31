@@ -1,3 +1,4 @@
+import { UserLevel } from './../interfaces/Results';
 import * as mongoose from "mongoose";
 import { IUserModel, MongoUser } from "../models/User";
 import { IThemaModel, MongoThema } from "../models/Thema";
@@ -32,6 +33,22 @@ export class MongoDBConnector {
         const query = MongoUser.findOne({'Id': Id});
         const promise = query.exec();
         return promise;
+    }
+
+    public static saveUser(Id: string): any {
+        let User = new MongoUser ({
+            _id: "User" + Id,
+            Id:Id,
+            UserTyp: UserLevel.STUDENT
+        });
+        User.
+        save((err) => {
+            if (err) {
+                console.log(err);
+                return;
+            }
+        });
+        return User;
     }
 
     public static getCourseById(Id: string): Promise<IKursModel> {
