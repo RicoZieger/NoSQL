@@ -56,7 +56,7 @@ export class CourseRoute extends Route {
         });
 
         //liefert null, falls Nutzer (Student und Prof) keinen Kurs haben
-        //liefert für Profs eine Liste mit ihren Kursen (nur die Namen, da ein Prof sonst nichts sieht)
+        //liefert für Profs eine Liste mit ihren Kursen (Namen und _ids)
         //liefert für Studenten die Details ihres Kurses (ein Student hat nur einen Kurs, daher direkt die Detailseite laden)
         this.app.get('/courses/user/:userId', (request: Request, response: Response) =>{
             const userId: string = request.params.userId;
@@ -158,7 +158,7 @@ export class CourseRoute extends Route {
         });
     }
 
-    private static assembleUserCourses(user: IUserModel): Promise<CourseResult | string[]>{
+    private static assembleUserCourses(user: IUserModel): Promise<CourseResult | JSON[]>{
         const deferred = require('q').defer();
 
         if(user.Kurse.length === 0){
@@ -176,9 +176,9 @@ export class CourseRoute extends Route {
                     deferred.reject();
                 });
         }else{
-            let kurse: string[] = [];
+            let kurse: JSON[] = [];
             for(let i = 0; i < user.Kurse.length; i++){
-                kurse.push(user.Kurse[i].substr(5));
+                kurse.push(JSON.parse(JSON.stringify({Titel:user.Kurse[i].substr(5), _id: user.Kurse[i]})));
             }
             deferred.resolve(kurse);
         }
