@@ -25,7 +25,7 @@ export class CourseRoute extends Route {
             const userId = request.params.userId;
             const courseId: string = request.params.courseId;
 
-            MongoDBConnector.getCourseById('KURS_'+courseId)
+            MongoDBConnector.getCourseById(courseId)
                 .then(CourseRoute.getAllTestsOfCourse)
                 .then(CourseRoute.getAllTopicsOfCourse)
                 .then(CourseRoute.getAllFilesOfAllCourseTopics)
