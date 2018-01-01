@@ -30,7 +30,7 @@ export class MongoDBConnector {
     }
 
     public static getUserByExternalId(Id: number): Promise<IUserModel> {
-        const query = MongoUser.findOne({'Id': Id});
+        const query = MongoUser.findOne({'_id': Id});
         const promise = query.exec();
         return promise;
     }
