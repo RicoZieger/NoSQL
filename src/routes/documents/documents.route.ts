@@ -7,6 +7,11 @@ import mime = require('mime-types');
 import filesystem = require('fs');
 
 
+/*
+    NOTE
+    This class exists only for test purposes and might not be consistent when it comes to coding and/or naming
+    conventions. 
+*/
 export class DocumentRoute extends Route {
 
     getRoutes(): void {

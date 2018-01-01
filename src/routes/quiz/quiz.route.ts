@@ -12,11 +12,10 @@ export class QuizRoute extends Route {
     private static questions: IFrageModel[];
 
     getRoutes(): void {
-        this.app.get('/user/:userId/course/:courseId/quiz/:quizId', (request: Request, response: Response) => {
-            //TODO userId und courseId können entfallen, da ein Test über seine Id eindeutig aufgefunden werden kann.
-            //(beide Werte werden hier auch nicht verwendet)
+        //liefert den angegebenen Tests
+        //TODO prüfen, ob der angegebene Nutzer eine Berechtigung hat
+        this.app.get('/users/:userId/quizs/:quizId', (request: Request, response: Response) => {
             const userId = request.params.userId;
-            const courseId = request.params.courseId;
             const quizId = request.params.quizId;
 
             MongoDBConnector.getTestById(quizId)
@@ -30,24 +29,21 @@ export class QuizRoute extends Route {
                 });
         });
 
-        this.app.post('/user/:userId/course/:courseId/quiz/quizId', (request: Request, response: Response) =>{
-            //TODO courseId kann hier entfallen, da der Test über seine Id ja schon eindeutig referenziert wird.
+        // legt ein Testergebnis für den angegebenen Nutzer an
+        // TODO prüfen, ob der angegebene Nutzer die Berechtigung dazu hat
+        this.app.post('/users/:userId/quizs', (request: Request, response: Response) =>{
             const userId = request.params.userId;
-            const courseId = request.params.courseId;
-            const quizId = request.params.quizId;
-
-            //TODO so oder wie auch immer das QuizResult Objekt aus dem Body auslesen.
             const quizResult: QuizResult = request.body as QuizResult;
 
-            MongoDBConnector.getTestById(quizId)
+            MongoDBConnector.getTestById(quizResult.quizId)
                 .then(QuizRoute.getAllQuestions)
                 .then(function(questions: IFrageModel[]){
                     let testergebnisModel: ITestergebnisModel = QuizRoute.assembleTestergebnisModel(quizResult, questions, userId);
                     testergebnisModel.save()
                         .then(function(value){
-                            QuizRoute.updateUserTests(userId, quizId)
+                            QuizRoute.updateUserTests(userId, quizResult.quizId)
                                 .then(function(success){
-                                    QuizRoute.sendSuccessResponse(null, response);
+                                    QuizRoute.sendSuccessResponse("Das Testergebnis wurde erfolgreich angelegt", response);
                                 },
                                 function(err){
                                     testergebnisModel.remove();
