@@ -13,7 +13,7 @@ import * as passport from 'passport';
 
 console.log('MongoDB', process.env.MONGO_DB);
 console.log('MySQL', process.env.MY_SQL);
-
+const secret = 'myspecialsecret';
 const app = express();
 app.use(bodyParser.json()); // support JSON-encoded bodies
 app.use(function (req, res, next) {

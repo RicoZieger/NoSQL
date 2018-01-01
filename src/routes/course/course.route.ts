@@ -6,7 +6,7 @@ import { IKursModel, MongoKurs } from "../../models/Kurs";
 import { ITestModel, MongoTest } from "../../models/Test";
 import { IFrageModel, MongoFrage } from "../../models/Frage";
 import { IUserModel, MongoUser } from "../../models/User";
-import { CourseResult, FileMetadata, QuizMetadata, Topic } from "../../interfaces/Results";
+import { CourseResult, FileMetadata, QuizMetadata, Topic, UserLevel, CourseMetadata } from "../../interfaces/Results";
 import { MongoDBConnector } from "../../DBConnectors/MongoDBConnector";
 import filesystem = require('fs');
 
@@ -18,11 +18,10 @@ export class CourseRoute extends Route {
     private static files: IDateiModel[];
 
     getRoutes(): void {
-        this.app.get('/user/:userId/course/:courseId', (request: Request, response: Response) => {
-            response.setHeader('Content-Type', 'application/json');
+        //liefert die Details zu dem angegebenen Kurs
+        //TODO prüfen, ob der user mit der angegebenen Id die Berechtigung dazu hat
+        this.app.get('/users/:userId/courses/:courseId', (request: Request, response: Response) => {
 
-            //TODO: Kurse sind nicht vom Benutzer abhängig, die user id hat hier keinen Einfluss und kann entfallen.
-            //(Wird aktuall auch nicht mehr verwendet)
             const userId = request.params.userId;
             const courseId: string = request.params.courseId;
 
@@ -39,7 +38,22 @@ export class CourseRoute extends Route {
                 });
         });
 
-        this.app.post('/course', (request: Request, response: Response) => {
+        // liefert eine Liste an Kursmetadaten (Titel und id) für den angegebenen Nutzer
+        //TODO prüfen, ob der user mit der angegebenen Id die Berechtigung dazu hat
+        this.app.get('/users/:userId/courses/all/list', (request: Request, response: Response) =>{
+            const userId: string = request.params.userId;
+            MongoDBConnector.getUserById(userId)
+                .then(CourseRoute.assembleUserCourses)
+                .then(function(result){
+                    CourseRoute.sendSuccessResponse(result, response);
+                }, function(err){
+                    CourseRoute.sendFailureResponse("Fehler bei der Kursabfrage", err, response);
+                });
+        });
+
+        //legt einen neuen Kurs an
+        //TODO prüfen, ob der user mit der angegebenen Id die Berechtigung dazu hat
+        this.app.post('/users/:userId/courses', (request: Request, response: Response) => {
 
             //expected data schema from frontend
             let data = {
@@ -108,11 +122,11 @@ export class CourseRoute extends Route {
                     }
                 ],
                 'courseParticipants' : [
-                    '1', '2', '5', '1420252', '1397856'
+                    '1', '2', '5'
                 ]
             }
 
-            MongoDBConnector.getCourseById('KURS_' + data.courseName)
+            MongoDBConnector.getCourseById(data.courseName)
                 .then(function (result) {
                     if (result === null) {
                         //TODO Hier noch error handling? Alles zurück setzen, wenn ein Teil nicht angelegt werden kann?
@@ -128,48 +142,60 @@ export class CourseRoute extends Route {
         });
     }
 
+    private static assembleUserCourses(user: IUserModel): CourseMetadata[]{
+        if(user.Kurse.length === 0){
+            return null;
+        }else{
+            let kurse: CourseMetadata[] = [];
+            for(let i = 0; i < user.Kurse.length; i++){
+                kurse.push(new CourseMetadata(user.Kurse[i], user.Kurse[i]));                
+            }
+            return kurse;
+        }
+    }
+
     private static createCourseRecursively(courseData: any): IKursModel {
         let newCourse = new MongoKurs();
         let topics: any[] = courseData.courseTopics;
         let quizs: any[] = courseData.courseQuizs;
 
-        newCourse._id = 'KURS_' + courseData.courseName;
+        newCourse._id = courseData.courseName;
         newCourse.Titel = courseData.courseName;
         newCourse.Themen = [];
         newCourse.Tests = [];
 
         for (let i = 0; i < topics.length; i++) {
-            newCourse.Themen.push(CourseRoute.createTopicRecursively(topics[i], newCourse._id)._id);
+            newCourse.Themen.push(CourseRoute.createTopicRecursively(topics[i], newCourse._id, i)._id);
         }
         for (let i = 0; i < quizs.length; i++) {
-            newCourse.Tests.push(CourseRoute.createQuizRecursively(quizs[i], newCourse._id)._id);
+            newCourse.Tests.push(CourseRoute.createQuizRecursively(quizs[i], newCourse._id, i)._id);
         }
-        
+
         CourseRoute.addCourseToUser(courseData);
 
         return newCourse;
     }
 
-    private static createTopicRecursively(topicData: any, idPrefix: string): IThemaModel {
+    private static createTopicRecursively(topicData: any, idPrefix: string, topicNumber: number): IThemaModel {
         let newTopic = new MongoThema();
         let files: any[] = topicData.files;
 
-        newTopic._id = idPrefix + '_' + topicData.topicName;
+        newTopic._id = idPrefix + '_Thema' + topicNumber;
         newTopic.Titel = topicData.topicName;
         newTopic.Text = topicData.topicDescription;
         newTopic.Dateien = [];
         for (let i = 0; i < topicData.files.length; i++) {
-            newTopic.Dateien.push(CourseRoute.createFileRecursively(topicData.files[i], newTopic._id)._id);
+            newTopic.Dateien.push(CourseRoute.createFileRecursively(topicData.files[i], newTopic._id, i)._id);
         }
 
         newTopic.save();
         return newTopic;
     }
 
-    private static createFileRecursively(fileData: any, idPrefix: string): IDateiModel {
+    private static createFileRecursively(fileData: any, idPrefix: string, fileNumber: number): IDateiModel {
         let newFile = new MongoDatei();
 
-        newFile._id = idPrefix + '_' + fileData.fileName;
+        newFile._id = idPrefix + '_Datei' + fileNumber;
         newFile.Titel = fileData.fileName;
 
         fileData.visibilityStartDate === null ? newFile.Anfangsdatum = null :
@@ -196,10 +222,10 @@ export class CourseRoute extends Route {
         return id;
     }
 
-    private static createQuizRecursively(quizData: any, idPrefix: string): ITestModel {
+    private static createQuizRecursively(quizData: any, idPrefix: string, quizNumber: number): ITestModel {
         let newQuiz = new MongoTest();
 
-        newQuiz._id = idPrefix + '_' + quizData.quizName;
+        newQuiz._id = idPrefix + '_Test' + quizNumber;
         newQuiz.Titel = quizData.quizName;
         quizData.visibilityStartDate === null ? newQuiz.Anfangsdatum = null :
             newQuiz.Anfangsdatum = new Date(quizData.visibilityStartDate);
@@ -228,11 +254,14 @@ export class CourseRoute extends Route {
     }
 
     private static addCourseToUser(courseData: any): void{
-        const courseId: string = 'KURS_'+courseData.courseName;
+        const courseId: string = courseData.courseName;
 
         for(let i = 0; i < courseData.courseParticipants.length; i++){
             let userId:string = courseData.courseParticipants[i];
-            MongoUser.findOneAndUpdate({_id: userId}, {$push:{Kurse: courseId}});
+            MongoUser.findOneAndUpdate({_id: userId}, {$push:{Kurse: courseId}}, function(err, doc, res){
+                if(doc != null)
+                    doc.save();
+            });
         }
     }
 

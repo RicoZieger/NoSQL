@@ -30,7 +30,7 @@ export class LoginRoute extends Route{
 });
 }
 
-    private static assembleLoginResult(user: IUserModel): LoginResult{
-        return new LoginResult(user.Id, user.UserTyp);
-    }
+private static assembleLoginResult(user: IUserModel): LoginResult{
+    return new LoginResult(user._id, user.UserTyp);
+}
 }
