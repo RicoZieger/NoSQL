@@ -6,7 +6,8 @@ import { IKursModel, MongoKurs } from "../../models/Kurs";
 import { ITestModel, MongoTest } from "../../models/Test";
 import { IFrageModel, MongoFrage } from "../../models/Frage";
 import { IUserModel, MongoUser } from "../../models/User";
-import { CourseResult, FileMetadata, QuizMetadata, Topic, UserLevel } from "../../interfaces/Results";
+import { CourseResult, FileMetadata, QuizMetadata, Topic, UserLevel, CourseMetadata } from "../../interfaces/Results";
+import { NewCourse, NewTopic, NewFile, NewQuiz, NewQuestion } from "../../interfaces/Results";
 import { MongoDBConnector } from "../../DBConnectors/MongoDBConnector";
 import filesystem = require('fs');
 
@@ -18,10 +19,10 @@ export class CourseRoute extends Route {
     private static files: IDateiModel[];
 
     getRoutes(): void {
-        //TODO mit der route /courses/user/:userId kann diese Route im Grunde komplett entfallen
-        this.app.get('/user/:userId/course/:courseId', (request: Request, response: Response) => {
-            //TODO: Kurse sind nicht vom Benutzer abhängig, die user id hat hier keinen Einfluss und kann entfallen.
-            //(Wird aktuall auch nicht mehr verwendet)
+        //liefert die Details zu dem angegebenen Kurs
+        //TODO prüfen, ob der user mit der angegebenen Id die Berechtigung dazu hat
+        this.app.get('/users/:userId/courses/:courseId', (request: Request, response: Response) => {
+
             const userId = request.params.userId;
             const courseId: string = request.params.courseId;
 
@@ -38,27 +39,9 @@ export class CourseRoute extends Route {
                 });
         });
 
-        //returns a list of users (external and internal id) that can be added to a new course because they are either
-        //admins or students without a course yet
-        this.app.get('/course/availableUsers', (request: Request, response: Response) => {
-            MongoDBConnector.getAllAvailableUsers()
-                .then(function(user){                    
-                    let result: JSON[] = [];
-
-                    for(let i = 0; i < user.length; i++){
-                        result.push(JSON.parse(JSON.stringify({Id: user[i].Id, _id: user[i]._id})));
-                    }
-
-                    CourseRoute.sendSuccessResponse(result, response);
-                }, function(err){
-                    CourseRoute.sendFailureResponse("Fehler beim Ermitteln der verfügbaren Nutzer", err, response);
-                });
-        });
-
-        //liefert null, falls Nutzer (Student und Prof) keinen Kurs haben
-        //liefert für Profs eine Liste mit ihren Kursen (Namen und _ids)
-        //liefert für Studenten die Details ihres Kurses (ein Student hat nur einen Kurs, daher direkt die Detailseite laden)
-        this.app.get('/courses/user/:userId', (request: Request, response: Response) =>{
+        // liefert eine Liste an Kursmetadaten (Titel und id) für den angegebenen Nutzer
+        //TODO prüfen, ob der user mit der angegebenen Id die Berechtigung dazu hat
+        this.app.get('/users/:userId/courses/all/list', (request: Request, response: Response) =>{
             const userId: string = request.params.userId;
             MongoDBConnector.getUserById(userId)
                 .then(CourseRoute.assembleUserCourses)
@@ -69,83 +52,15 @@ export class CourseRoute extends Route {
                 });
         });
 
-        this.app.post('/course', (request: Request, response: Response) => {
+        //legt einen neuen Kurs an
+        //TODO prüfen, ob der user mit der angegebenen Id die Berechtigung dazu hat
+        //TODO error handling ? Alles zurück setzen?
+        this.app.post('/users/:userId/courses', (request: Request, response: Response) => {
+            let data: NewCourse = request.body as NewCourse;
 
-            //expected data schema from frontend
-            let data = {
-                'courseName': 'Mein neuer Kurs',
-                'courseTopics': [
-                    {
-                        'topicName': 'Thema1',
-                        'topicDescription': 'Beschreibung zu Thema1 in meinem neuen Kurs',
-                        'files': [
-                            {
-                                'fileName': 'Wichtige Hinweise',
-                                'visibilityStartDate': '2016-05-18T16:00:00.000Z',
-                                'visibilityEndDate': '2018-05-18T16:00:00.000Z',
-                                'data': [
-                                    117, 64, 19, 32, 45, 66, 78, 50
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        'topicName': 'Thema2',
-                        'topicDescription': 'Beschreibung zu Thema2 in meinem neuen Kurs',
-                        'files': [
-                            {
-                                'fileName': 'So verdienen sie täglich 1000€',
-                                'visibilityStartDate': null,
-                                'visibilityEndDate': null,
-                                'data': [
-                                    117, 64, 19, 32, 45, 66, 78, 50
-                                ]
-                            }
-                        ]
-                    }
-                ],
-                'courseQuizs': [
-                    {
-                        'quizName': 'Blamieren oder Kassieren (Quiz)',
-                        'visibilityStartDate': null,
-                        'visibilityEndDate': null,
-                        'questions': [
-                            {
-                                'questionText': 'Wie verdienen sie täglich 1000€?',
-                                'possibleAnwsers': [
-                                    'Ich',
-                                    'Weiß',
-                                    'es',
-                                    'nicht'
-                                ],
-                                'correctAnwsers': [
-                                    2, 4
-                                ]
-                            },
-                            {
-                                'questionText': 'Warum fallen Menschen auf Trickbetrüger rein?',
-                                'possibleAnwsers': [
-                                    'Sie',
-                                    'wollen',
-                                    'reich',
-                                    'werden'
-                                ],
-                                'correctAnwsers': [
-                                    3
-                                ]
-                            }
-                        ]
-                    }
-                ],
-                'courseParticipants' : [
-                    '1', '2', '5', '1420252', '1397856'
-                ]
-            }
-
-            MongoDBConnector.getCourseById('KURS_' + data.courseName)
+            MongoDBConnector.getCourseById(data.name)
                 .then(function (result) {
                     if (result === null) {
-                        //TODO Hier noch error handling? Alles zurück setzen, wenn ein Teil nicht angelegt werden kann?
                         let newCourse = CourseRoute.createCourseRecursively(data);
                         newCourse.save();
                         CourseRoute.sendSuccessResponse("Kurs angelegt", response);
@@ -158,93 +73,77 @@ export class CourseRoute extends Route {
         });
     }
 
-    private static assembleUserCourses(user: IUserModel): Promise<CourseResult | JSON[]>{
-        const deferred = require('q').defer();
-
+    private static assembleUserCourses(user: IUserModel): CourseMetadata[]{
         if(user.Kurse.length === 0){
-            deferred.resolve(null);
-        }
-        else if(user.UserTyp === UserLevel.STUDENT){
-            MongoDBConnector.getCourseById(user.Kurse[0])
-                .then(CourseRoute.getAllTestsOfCourse)
-                .then(CourseRoute.getAllTopicsOfCourse)
-                .then(CourseRoute.getAllFilesOfAllCourseTopics)
-                .then(function (files) {
-                    CourseRoute.files = files;
-                    deferred.resolve(CourseRoute.assembleCourseResult());
-                }, function (err) {
-                    deferred.reject();
-                });
+            return null;
         }else{
-            let kurse: JSON[] = [];
+            let kurse: CourseMetadata[] = [];
             for(let i = 0; i < user.Kurse.length; i++){
-                kurse.push(JSON.parse(JSON.stringify({Titel:user.Kurse[i].substr(5), _id: user.Kurse[i]})));
+                kurse.push(new CourseMetadata(user.Kurse[i], user.Kurse[i]));
             }
-            deferred.resolve(kurse);
+            return kurse;
         }
-
-        return deferred.promise;
     }
 
-    private static createCourseRecursively(courseData: any): IKursModel {
+    private static createCourseRecursively(course: NewCourse): IKursModel {
         let newCourse = new MongoKurs();
-        let topics: any[] = courseData.courseTopics;
-        let quizs: any[] = courseData.courseQuizs;
+        let topics: NewTopic[] = course.topics;
+        let quizs: NewQuiz[] = course.quizs;
 
-        newCourse._id = 'KURS_' + courseData.courseName;
-        newCourse.Titel = courseData.courseName;
+        newCourse._id = course.name;
+        newCourse.Titel = course.name;
         newCourse.Themen = [];
         newCourse.Tests = [];
 
         for (let i = 0; i < topics.length; i++) {
-            newCourse.Themen.push(CourseRoute.createTopicRecursively(topics[i], newCourse._id)._id);
+            newCourse.Themen.push(CourseRoute.createTopicRecursively(topics[i], newCourse._id, i)._id);
         }
         for (let i = 0; i < quizs.length; i++) {
-            newCourse.Tests.push(CourseRoute.createQuizRecursively(quizs[i], newCourse._id)._id);
+            newCourse.Tests.push(CourseRoute.createQuizRecursively(quizs[i], newCourse._id, i)._id);
         }
 
-        CourseRoute.addCourseToUser(courseData);
+        CourseRoute.addCourseToUser(course);
 
         return newCourse;
     }
 
-    private static createTopicRecursively(topicData: any, idPrefix: string): IThemaModel {
+    private static createTopicRecursively(topic: NewTopic, idPrefix: string, topicNumber: number): IThemaModel {
         let newTopic = new MongoThema();
-        let files: any[] = topicData.files;
+        let files: NewFile[] = topic.files;
 
-        newTopic._id = idPrefix + '_' + topicData.topicName;
-        newTopic.Titel = topicData.topicName;
-        newTopic.Text = topicData.topicDescription;
+        newTopic._id = idPrefix + '_Thema' + topicNumber;
+        newTopic.Titel = topic.name;
+        newTopic.Text = topic.description;
         newTopic.Dateien = [];
-        for (let i = 0; i < topicData.files.length; i++) {
-            newTopic.Dateien.push(CourseRoute.createFileRecursively(topicData.files[i], newTopic._id)._id);
+        for (let i = 0; i < topic.files.length; i++) {
+            newTopic.Dateien.push(CourseRoute.createFileRecursively(topic.files[i], newTopic._id, i)._id);
         }
 
         newTopic.save();
         return newTopic;
     }
 
-    private static createFileRecursively(fileData: any, idPrefix: string): IDateiModel {
+    private static createFileRecursively(file: NewFile, idPrefix: string, fileNumber: number): IDateiModel {
         let newFile = new MongoDatei();
 
-        newFile._id = idPrefix + '_' + fileData.fileName;
-        newFile.Titel = fileData.fileName;
+        newFile._id = idPrefix + '_Datei' + fileNumber;
+        newFile.Titel = file.name;
 
-        fileData.visibilityStartDate === null ? newFile.Anfangsdatum = null :
-            newFile.Anfangsdatum = new Date(fileData.visibilityStartDate);
-        fileData.visibilityEndDate === null ? newFile.Ablaufdatum = null :
-            newFile.Ablaufdatum = new Date(fileData.visibilityEndDate);
-        newFile.gridfsLink = CourseRoute.saveFile(fileData.data, newFile.Titel, newFile._id);
+        file.visibilityStartDate === null ? newFile.Anfangsdatum = null :
+            newFile.Anfangsdatum = file.visibilityStartDate;
+        file.visibilityEndDate === null ? newFile.Ablaufdatum = null :
+            newFile.Ablaufdatum = file.visibilityEndDate;
+        newFile.gridfsLink = CourseRoute.saveFile(file.data, newFile.Titel, newFile._id);
 
         newFile.save();
         return newFile;
     }
 
-    private static saveFile(file: any, filename: string, idPrefix: string): string {
+    private static saveFile(filedata: any, filename: string, idPrefix: string): string {
         const tmpFileName = "tmp_up_" + filename;
         const id = idPrefix + '_ActualData';
 
-        filesystem.writeFile(tmpFileName, Buffer.from(file), function (err) {
+        filesystem.writeFile(tmpFileName, Buffer.from(filedata), function (err) {
             let fileStream = MongoDBConnector.saveFileWithId(id, filename, tmpFileName);
             fileStream.on('close', function (file) {
                 filesystem.unlinkSync(tmpFileName);
@@ -254,43 +153,46 @@ export class CourseRoute extends Route {
         return id;
     }
 
-    private static createQuizRecursively(quizData: any, idPrefix: string): ITestModel {
+    private static createQuizRecursively(quiz: NewQuiz, idPrefix: string, quizNumber: number): ITestModel {
         let newQuiz = new MongoTest();
 
-        newQuiz._id = idPrefix + '_' + quizData.quizName;
-        newQuiz.Titel = quizData.quizName;
-        quizData.visibilityStartDate === null ? newQuiz.Anfangsdatum = null :
-            newQuiz.Anfangsdatum = new Date(quizData.visibilityStartDate);
-        quizData.visibilityEndDate === null ? newQuiz.Ablaufdatum = null :
-            newQuiz.Ablaufdatum = new Date(quizData.visibilityEndDate);
+        newQuiz._id = idPrefix + '_Test' + quizNumber;
+        newQuiz.Titel = quiz.name;
+        quiz.visibilityStartDate === null ? newQuiz.Anfangsdatum = null :
+            newQuiz.Anfangsdatum = quiz.visibilityStartDate;
+        quiz.visibilityEndDate === null ? newQuiz.Ablaufdatum = null :
+            newQuiz.Ablaufdatum = quiz.visibilityEndDate;
         newQuiz.AbgeschlossenVon = [];
         newQuiz.Fragen = [];
-        for (let i = 0; i < quizData.questions.length; i++) {
-            newQuiz.Fragen.push(CourseRoute.createQuestionRecursively(quizData.questions[i], (newQuiz._id + '_Frage' + i))._id);
+        for (let i = 0; i < quiz.questions.length; i++) {
+            newQuiz.Fragen.push(CourseRoute.createQuestionRecursively(quiz.questions[i], (newQuiz._id + '_Frage' + i))._id);
         }
 
         newQuiz.save();
         return newQuiz;
     }
 
-    private static createQuestionRecursively(questionData: any, id: string): IFrageModel {
+    private static createQuestionRecursively(question: NewQuestion, id: string): IFrageModel {
         let newQuestion = new MongoFrage();
 
         newQuestion._id = id;
-        newQuestion.Fragetext = questionData.questionText;
-        newQuestion.Antworten = questionData.possibleAnwsers;
-        newQuestion.KorrekteAntwortenIndex = questionData.correctAnwsers;
+        newQuestion.Fragetext = question.questionText;
+        newQuestion.Antworten = question.possibleAnwsers;
+        newQuestion.KorrekteAntwortenIndex = question.correctAnwsers;
 
         newQuestion.save();
         return newQuestion;
     }
 
-    private static addCourseToUser(courseData: any): void{
-        const courseId: string = 'KURS_'+courseData.courseName;
+    private static addCourseToUser(course: NewCourse): void{
+        const courseId: string = course.name;
 
-        for(let i = 0; i < courseData.courseParticipants.length; i++){
-            let userId:string = courseData.courseParticipants[i];
-            MongoUser.findOneAndUpdate({_id: userId}, {$push:{Kurse: courseId}});
+        for(let i = 0; i < course.users.length; i++){
+            let userId:string = course.users[i];
+            MongoUser.findOneAndUpdate({_id: userId}, {$push:{Kurse: courseId}}, function(err, doc, res){
+                if(doc != null)
+                    doc.save();
+            });
         }
     }
 
