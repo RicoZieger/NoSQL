@@ -8,6 +8,7 @@ import { IFrageModel, MongoFrage } from "../models/Frage";
 import { ITestergebnisModel, MongoTestergebnis } from "../models/Testergebnis";
 import fs = require('fs');
 import Grid = require('gridfs-stream');
+import { UserLevel } from "../interfaces/Results";
 
 export class MongoDBConnector {
 
@@ -30,9 +31,24 @@ export class MongoDBConnector {
     }
 
     public static getUserByExternalId(Id: number): Promise<IUserModel> {
-        const query = MongoUser.findOne({'Id': Id});
+        const query = MongoUser.findOne({'_id': Id});
         const promise = query.exec();
         return promise;
+    }
+
+    public static saveUser(Id: string): any {
+        let User = new MongoUser ({
+            _id: Id,
+            UserTyp: UserLevel.STUDENT
+        });
+        User.
+        save((err) => {
+            if (err) {
+                console.log(err);
+                return;
+            }
+        });
+        return User;
     }
 
     public static getUserById(Id: string): Promise<IUserModel> {
