@@ -43,7 +43,7 @@ export class QuizRoute extends Route {
                         .then(function(value){
                             QuizRoute.updateUserTests(userId, quizResult.quizId)
                                 .then(function(success){
-                                    QuizRoute.sendSuccessResponse(null, response);
+                                    QuizRoute.sendSuccessResponse("Das Testergebnis wurde erfolgreich angelegt", response);
                                 },
                                 function(err){
                                     testergebnisModel.remove();
