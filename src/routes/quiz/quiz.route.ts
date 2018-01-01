@@ -77,7 +77,7 @@ export class QuizRoute extends Route {
         let testergebnis = new MongoTestergebnis();
         let userPoints: number = 0;
 
-        testergebnis._id = 'TESTERGEBNIS_'+quizResult.quizId+'_'+userId;
+        testergebnis._id = quizResult.quizId+'_Ergebnis_'+userId;
         testergebnis.ZugehörigerTest = quizResult.quizId;
         testergebnis.ZugehörigerUser = userId;
 
