@@ -47,7 +47,7 @@ export class CourseRoute extends Route {
                     let result: JSON[] = [];
 
                     for(let i = 0; i < user.length; i++){
-                        result.push(JSON.parse(JSON.stringify({Id: user[i].Id, _id: user[i]._id})));
+                        result.push(JSON.parse(JSON.stringify({_id: user[i]._id})));
                     }
 
                     CourseRoute.sendSuccessResponse(result, response);
