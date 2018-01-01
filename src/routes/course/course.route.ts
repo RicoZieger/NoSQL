@@ -38,25 +38,6 @@ export class CourseRoute extends Route {
                 });
         });
 
-        // liefert eine Liste von Studenten, die noch keinen Kurs haben
-        //TODO prüfen, ob der user mit der angegebenen Id die Berechtigung dazu hat
-        //TODO in user route verschieben
-        this.app.get('/users/:userId/available', (request: Request, response: Response) => {
-            MongoDBConnector.getAllAvailableUsers()
-                .then(function(user){
-                    let result: JSON[] = [];
-
-                    for(let i = 0; i < user.length; i++){
-                        if(user[i].UserTyp === UserLevel.STUDENT)
-                            result.push(JSON.parse(JSON.stringify({_id: user[i]._id})));
-                    }
-
-                    CourseRoute.sendSuccessResponse(result, response);
-                }, function(err){
-                    CourseRoute.sendFailureResponse("Fehler beim Ermitteln der verfügbaren Nutzer", err, response);
-                });
-        });
-
         // liefert eine Liste an Kursmetadaten (Titel und id) für den angegebenen Nutzer
         //TODO prüfen, ob der user mit der angegebenen Id die Berechtigung dazu hat
         this.app.get('/users/:userId/courses/all/list', (request: Request, response: Response) =>{
