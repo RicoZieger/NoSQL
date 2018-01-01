@@ -1,10 +1,10 @@
 import { Route } from "../../interfaces/Route";
 import { Request, Response } from "express";
-import { Message, Question, Quiz, Status, QuizResult, UserAnswer } from "../../interfaces/Results";
+import { Question, Quiz, QuizResult } from "../../interfaces/Results";
 import { MongoDBConnector } from "../../DBConnectors/MongoDBConnector";
-import { ITestModel, MongoTest} from "../../models/Test";
-import { IFrageModel, MongoFrage} from "../../models/Frage";
-import { ITestergebnisModel, MongoTestergebnis} from "../../models/Testergebnis";
+import { ITestModel } from "../../models/Test";
+import { IFrageModel } from "../../models/Frage";
+import { ITestergebnisModel, MongoTestergebnis } from "../../models/Testergebnis";
 
 export class QuizRoute extends Route {
 

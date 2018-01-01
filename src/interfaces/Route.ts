@@ -1,5 +1,4 @@
-import { Express } from "express";
-import { Response } from "express";
+import { Express, Response } from "express";
 import { Message, Status } from "../interfaces/Results";
 
 export abstract class Route {

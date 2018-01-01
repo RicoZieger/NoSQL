@@ -1,10 +1,9 @@
-import { Express, Request, Response } from "express";
+import { Request, Response } from "express";
 import { Route } from "../../interfaces/Route";
-import { LoginResult, Message, Status, UserLevel } from "../../interfaces/Results";
+import { LoginResult } from "../../interfaces/Results";
 import { MariaDBConnector } from "../../DBConnectors/MariaDBConnector";
 import { MongoDBConnector } from "../../DBConnectors/MongoDBConnector";
 import { IUserModel } from "../../models/User";
-import mysql = require('mysql');
 
 export class LoginRoute extends Route{
 

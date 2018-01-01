@@ -6,8 +6,10 @@ import { IKursModel, MongoKurs } from "../../models/Kurs";
 import { ITestModel, MongoTest } from "../../models/Test";
 import { IFrageModel, MongoFrage } from "../../models/Frage";
 import { IUserModel, MongoUser } from "../../models/User";
-import { CourseResult, FileMetadata, QuizMetadata, Topic, UserLevel, CourseMetadata } from "../../interfaces/Results";
-import { NewCourse, NewTopic, NewFile, NewQuiz, NewQuestion } from "../../interfaces/Results";
+import {
+    CourseMetadata, CourseResult, FileMetadata, NewCourse, NewFile, NewQuestion, NewQuiz, NewTopic, QuizMetadata,
+    Topic
+} from "../../interfaces/Results";
 import { MongoDBConnector } from "../../DBConnectors/MongoDBConnector";
 import filesystem = require('fs');
 
