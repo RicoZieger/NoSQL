@@ -43,7 +43,7 @@ export class CourseRoute extends Route {
 
         // liefert eine Liste an Kursmetadaten (Titel und id) für den angegebenen Nutzer
         //TODO prüfen, ob der user mit der angegebenen Id die Berechtigung dazu hat
-        this.app.get('/users/:userId/courses/all/list', (request: Request, response: Response) =>{
+        this.app.get('/users/:userId/courses', (request: Request, response: Response) =>{
             const userId: string = request.params.userId;
             MongoDBConnector.getUserById(userId)
                 .then(CourseRoute.assembleUserCourses)
