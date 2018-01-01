@@ -4,15 +4,13 @@ import { UserLevel } from "../interfaces/Results";
 
 export interface IUserModel extends Document {
     _id: string;
-    Id: number;
     UserTyp: UserLevel;
     Kurse: string[];
     Testergebnisse: string[];
 }
 
 let userSchema = new mongoose.Schema({
-    _id: {type: String},
-    Id: {type: Number},
+    _id: {type: String},    
     UserTyp: {type: String},
     Kurse: [{type: String}],
     Testergebnisse: [{type: String}]
