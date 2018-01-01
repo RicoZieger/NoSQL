@@ -192,6 +192,7 @@ export class CourseRoute extends Route {
         for(let i = 0; i < course.users.length; i++){
             let userId:string = course.users[i];
             MongoUser.findOneAndUpdate({_id: userId}, {$push:{Kurse: courseId}}, function(err, doc, res){
+                //TODO only save if admin or student without orher courses
                 if(doc != null)
                     doc.save();
             });

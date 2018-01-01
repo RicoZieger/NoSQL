@@ -107,6 +107,7 @@ export class QuizRoute extends Route {
         return false;
     }
 
+//TODO findOneAndUpdate nutzen
     private static updateUserTests(userId: string, quizId: string): Promise<ITestModel>{
         const deferred = require('q').defer();
 
