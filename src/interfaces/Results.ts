@@ -67,3 +67,28 @@ export class QuizUserResult{
     constructor(public user_id: string, public points: string){
     }
 }
+
+export class NewCourse{
+    constructor(public name: string, public topics: NewTopic[], public quizs: NewQuiz[], public users: string[]){
+    }
+}
+
+export class NewTopic{
+    constructor(public name: string, public description: string, public files: NewFile[]){
+    }
+}
+
+export class NewFile{
+    constructor(public name: string, public visibilityStartDate: Date, public visibilityEndDate: Date, public data: number[]){
+    }
+}
+
+export class NewQuiz{
+    constructor(public name: string, public visibilityStartDate: Date, public visibilityEndDate: Date, public questions: NewQuestion[]){
+    }
+}
+
+export class NewQuestion{
+    constructor(public questionText: string, public possibleAnwsers: string[], public correctAnwsers: number[]){
+    }
+}
