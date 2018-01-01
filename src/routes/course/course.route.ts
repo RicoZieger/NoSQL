@@ -6,7 +6,7 @@ import { IKursModel, MongoKurs } from "../../models/Kurs";
 import { ITestModel, MongoTest } from "../../models/Test";
 import { IFrageModel, MongoFrage } from "../../models/Frage";
 import { IUserModel, MongoUser } from "../../models/User";
-import { CourseResult, FileMetadata, QuizMetadata, Topic, UserLevel } from "../../interfaces/Results";
+import { CourseResult, FileMetadata, QuizMetadata, Topic, UserLevel, CourseMetadata } from "../../interfaces/Results";
 import { MongoDBConnector } from "../../DBConnectors/MongoDBConnector";
 import filesystem = require('fs');
 
@@ -142,13 +142,13 @@ export class CourseRoute extends Route {
         });
     }
 
-    private static assembleUserCourses(user: IUserModel): JSON[]{
+    private static assembleUserCourses(user: IUserModel): CourseMetadata[]{
         if(user.Kurse.length === 0){
             return null;
         }else{
-            let kurse: JSON[] = [];
+            let kurse: CourseMetadata[] = [];
             for(let i = 0; i < user.Kurse.length; i++){
-                kurse.push(JSON.parse(JSON.stringify({_id: user.Kurse[i], Titel: user.Kurse[i]})));
+                kurse.push(new CourseMetadata(user.Kurse[i], user.Kurse[i]));                
             }
             return kurse;
         }

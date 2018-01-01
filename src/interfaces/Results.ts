@@ -10,7 +10,7 @@ export enum UserLevel {
 
 export interface Message {
     status: Status;
-    data: LoginResult | CourseResult | Quiz;
+    data: LoginResult | CourseResult | Quiz | CourseMetadata | QuizUserResult;
 }
 
 export class LoginResult {
@@ -55,5 +55,15 @@ export class QuizResult{
 
 export class UserAnswer{
     constructor(public questionId: string, public givenAnswerIndizies: number[]){
+    }
+}
+
+export class CourseMetadata{
+    constructor(public _id: string, public name: string){
+    }
+}
+
+export class QuizUserResult{
+    constructor(public user_id: string, public points: string){
     }
 }
