@@ -27,13 +27,7 @@ export class MongoDBConnector {
             .on('error', (error) => {
                 console.log('MongoDB', error);
             });
-    }
-
-    public static getUserByExternalId(Id: number): Promise<IUserModel> {
-        const query = MongoUser.findOne({'_id': Id});
-        const promise = query.exec();
-        return promise;
-    }
+    }    
 
     public static getUserById(Id: string): Promise<IUserModel> {
         const query = MongoUser.findOne({'_id': Id});

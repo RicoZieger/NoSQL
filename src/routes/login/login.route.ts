@@ -10,7 +10,7 @@ export class LoginRoute extends Route{
     getRoutes(): void {
         this.app.post('/login', (request: Request, response: Response) => {
             MariaDBConnector.getUserId(request.body.username, request.body.password)
-              .then(MongoDBConnector.getUserByExternalId)
+              .then(MongoDBConnector.getUserById)
               .then(function(user){
                   LoginRoute.sendSuccessResponse(LoginRoute.assembleLoginResult(user), response);
               }, function(err){
