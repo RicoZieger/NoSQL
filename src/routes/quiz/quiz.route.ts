@@ -2,7 +2,7 @@ import { Route } from "../../interfaces/Route";
 import { Request, Response } from "express";
 import { Question, Quiz, QuizResult } from "../../interfaces/Results";
 import { MongoDBConnector } from "../../DBConnectors/MongoDBConnector";
-import { ITestModel } from "../../models/Test";
+import { ITestModel, MongoTest } from "../../models/Test";
 import { IFrageModel } from "../../models/Frage";
 import { ITestergebnisModel, MongoTestergebnis } from "../../models/Testergebnis";
 
@@ -107,17 +107,15 @@ export class QuizRoute extends Route {
         return false;
     }
 
-//TODO findOneAndUpdate nutzen
     private static updateUserTests(userId: string, quizId: string): Promise<ITestModel>{
         const deferred = require('q').defer();
 
-        MongoDBConnector.getTestById(quizId)
-            .then(function(test){
-                test.AbgeschlossenVon.push(userId);
-                return test.save();
-            }, function(err){
+         MongoTest.findOneAndUpdate({_id: quizId}, {$push:{AbgeschlossenVon: userId}}, function(err, doc, res){
+            if(doc != null)
+                return deferred.resolve(doc.save());
+            else
                 return deferred.reject();
-            });
+         });
 
         return deferred.promise;
     }
