@@ -14,7 +14,7 @@ export interface Message {
 }
 
 export class LoginResult {
-    constructor(public _id: string, public level: UserLevel) {
+    constructor(public _id: string, public level: UserLevel, public token: string) {
     }
 }
 
