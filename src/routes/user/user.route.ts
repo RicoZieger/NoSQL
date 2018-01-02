@@ -3,6 +3,7 @@ import { Route } from "../../interfaces/Route";
 import { UserLevel, Status } from "../../interfaces/Results";
 import { MongoDBConnector } from "../../DBConnectors/MongoDBConnector";
 import { MariaDBConnector } from "../../DBConnectors/MariaDBConnector";
+import { IUserModel, MongoUser } from "../../models/User";
 
 export class UserRoute extends Route {
 
@@ -25,18 +26,22 @@ export class UserRoute extends Route {
                 });
         });
 
+        //legt einen neuen Nutzer an.
+        //NOTE Es wird nicht geprüft, ob bereits ein Nutzer mit dieser Id existiert.
         this.app.post('/users/register/', (request: Request, response: Response) => {
-            var id = request.body.id;
-            var password = request.body.password;
-            var level = request.body.level;
+            const id: string = request.body.id;
+            const password: string = request.body.password;
+            const level:string = request.body.level;
+
             MariaDBConnector.createUser(id, password)
-            .then(MongoDBConnector.saveUser(id, level))    
+            .then(function (val){
+                return new MongoUser({_id: id, UserTyp: level, Kurse: null, Testergebnisse: null}).save();
+            })
             .then(function(result){
-                UserRoute.sendSuccessResponse(result, response);
+                UserRoute.sendSuccessResponse("Registrierung erfolgreich", response);
             }, function(err){
                 UserRoute.sendFailureResponse("Registrierung fehlgeschlagen", err, response);
             });
-
         });
     }
 

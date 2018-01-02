@@ -28,21 +28,6 @@ export class MongoDBConnector {
             .on('error', (error) => {
                 console.log('MongoDB', error);
             });
-    }    
-
-    public static saveUser(Id: string, level: string): any {
-        let User = new MongoUser ({
-            _id: Id,
-            UserTyp: level
-        });
-        User.
-        save((err) => {
-            if (err) {
-                console.log(err);
-                return;
-            }
-        });
-        return User;
     }
 
     public static getUserById(Id: string): Promise<IUserModel> {
