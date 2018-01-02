@@ -8,6 +8,7 @@ import { IFrageModel, MongoFrage } from "../models/Frage";
 import { ITestergebnisModel, MongoTestergebnis } from "../models/Testergebnis";
 import fs = require('fs');
 import Grid = require('gridfs-stream');
+import { UserLevel } from "../interfaces/Results";
 
 export class MongoDBConnector {
 
@@ -28,6 +29,21 @@ export class MongoDBConnector {
                 console.log('MongoDB', error);
             });
     }    
+
+    public static saveUser(Id: string, level: string): any {
+        let User = new MongoUser ({
+            _id: Id,
+            UserTyp: level
+        });
+        User.
+        save((err) => {
+            if (err) {
+                console.log(err);
+                return;
+            }
+        });
+        return User;
+    }
 
     public static getUserById(Id: string): Promise<IUserModel> {
         const query = MongoUser.findOne({'_id': Id});
