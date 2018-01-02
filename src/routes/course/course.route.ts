@@ -15,26 +15,34 @@ import filesystem = require('fs');
 
 export class CourseRoute extends Route {
 
-    private static course: IKursModel;
-    private static topics: IThemaModel[];
-    private static tests: ITestModel[];
-    private static files: IDateiModel[];
-
     getRoutes(): void {
         //liefert die Details zu dem angegebenen Kurs
         //TODO prüfen, ob der user mit der angegebenen Id die Berechtigung dazu hat
         this.app.get('/users/:userId/courses/:courseId', (request: Request, response: Response) => {
-
             const userId = request.params.userId;
             const courseId: string = request.params.courseId;
+            let course: IKursModel;
+            let topics: IThemaModel[] = [];
+            let tests: ITestModel[] = [];
 
             MongoDBConnector.getCourseById(courseId)
-                .then(CourseRoute.getAllTestsOfCourse)
-                .then(CourseRoute.getAllTopicsOfCourse)
+                .then(function(courseResult){
+                    course = courseResult;
+                    return courseResult.Tests;
+                })
+                .then(MongoDBConnector.getTestsByIds)
+                .then(function(testsResult){
+                    tests = testsResult;
+                    return course.Themen;
+                })
+                .then(MongoDBConnector.getTopicsByIds)
+                .then(function(topicsResult){
+                    topics = topicsResult;
+                    return topicsResult;
+                })
                 .then(CourseRoute.getAllFilesOfAllCourseTopics)
                 .then(function (files) {
-                    CourseRoute.files = files;
-                    let result: CourseResult = CourseRoute.assembleCourseResult();
+                    let result: CourseResult = CourseRoute.assembleCourseResult(course, tests, topics, files);
                     CourseRoute.sendSuccessResponse(result, response);
                 }, function (err) {
                     CourseRoute.sendFailureResponse("Fehler beim Laden des Kurses", err, response);
@@ -199,38 +207,35 @@ export class CourseRoute extends Route {
         }
     }
 
-    private static assembleCourseResult(): CourseResult {
-        const courseResult: CourseResult = new CourseResult(CourseRoute.course._id, CourseRoute.course.Titel);
-        const courseTopics: Topic[] = new Array(CourseRoute.topics.length);
+    private static assembleCourseResult(course: IKursModel, tests: ITestModel[], topics: IThemaModel[],
+        files: IDateiModel[]): CourseResult {
+        const courseResult: CourseResult = new CourseResult(course._id, course.Titel);
+        const courseTopics: Topic[] = new Array(topics.length);
         const courseFiles: FileMetadata[] = [];
         const courseTests: QuizMetadata[] = [];
         let now: Date = new Date();
 
-        for (let quizCounter = 0; quizCounter < CourseRoute.tests.length; quizCounter++) {
-            if (CourseRoute.isFileInVisibleNow(CourseRoute.tests[quizCounter].Anfangsdatum,
-                    CourseRoute.tests[quizCounter].Ablaufdatum)) {
-                courseTests.push(new QuizMetadata(CourseRoute.tests[quizCounter]._id,
-                    CourseRoute.tests[quizCounter].Titel));
+        for (let quizCounter = 0; quizCounter < tests.length; quizCounter++) {
+            if (CourseRoute.isFileInVisibleNow(tests[quizCounter].Anfangsdatum, tests[quizCounter].Ablaufdatum)) {
+                courseTests.push(new QuizMetadata(tests[quizCounter]._id, tests[quizCounter].Titel));
             }
         }
 
-        for (let fileCounter = 0; fileCounter < CourseRoute.files.length; fileCounter++) {
-            if (CourseRoute.isFileInVisibleNow(CourseRoute.files[fileCounter].Anfangsdatum,
-                    CourseRoute.files[fileCounter].Ablaufdatum)) {
-                courseFiles.push(new FileMetadata(CourseRoute.files[fileCounter]._id,
-                    CourseRoute.files[fileCounter].Titel, "FileLinkNotExistingYet"));
+        for (let fileCounter = 0; fileCounter < files.length; fileCounter++) {
+            if (CourseRoute.isFileInVisibleNow(files[fileCounter].Anfangsdatum, files[fileCounter].Ablaufdatum)) {
+                courseFiles.push(new FileMetadata(files[fileCounter]._id, files[fileCounter].Titel,
+                    files[fileCounter].gridfsLink));
             }
         }
 
         for (let topicCounter = 0; topicCounter < courseTopics.length; topicCounter++) {
-            const tmpTopic = new Topic(CourseRoute.topics[topicCounter]._id, CourseRoute.topics[topicCounter].Titel,
-                CourseRoute.topics[topicCounter].Text);
+            const tmpTopic = new Topic(topics[topicCounter]._id, topics[topicCounter].Titel, topics[topicCounter].Text);
             const topicFiles: FileMetadata[] = new Array();
-            const thisTopicFileIds: string[] = CourseRoute.topics[topicCounter].Dateien;
+            const thisTopicFileIds: string[] = topics[topicCounter].Dateien;
 
             for (let fileCounter = 0; fileCounter < courseFiles.length; fileCounter++) {
                 for (let fileIdsCounter = 0; fileIdsCounter < thisTopicFileIds.length; fileIdsCounter++) {
-                    if (thisTopicFileIds[fileIdsCounter] === CourseRoute.files[fileCounter].id) {
+                    if (thisTopicFileIds[fileIdsCounter] === files[fileCounter].id) {
                         topicFiles.push(courseFiles[fileCounter]);
                         break;
                     }
@@ -252,20 +257,9 @@ export class CourseRoute extends Route {
 
         return ((visibilityStart === null && visibilityEnd === null) ||
             ((visibilityStart <= now) && (visibilityEnd >= now)));
-    }
-
-    private static getAllTestsOfCourse(course: IKursModel): Promise<ITestModel[]> {
-        CourseRoute.course = course;
-        return MongoDBConnector.getTestsByIds(course.Tests);
-    }
-
-    private static getAllTopicsOfCourse(tests: ITestModel[]): Promise<IThemaModel[]> {
-        CourseRoute.tests = tests;
-        return MongoDBConnector.getTopicsByIds(CourseRoute.course.Themen);
-    }
+    }    
 
     private static getAllFilesOfAllCourseTopics(topics: IThemaModel[]): Promise<IDateiModel[]> {
-        CourseRoute.topics = topics;
         let fileIds: string[] = [];
 
         for (let i = 0; i < topics.length; i++) {
