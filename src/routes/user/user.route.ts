@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
 import { Route } from "../../interfaces/Route";
-import { UserLevel } from "../../interfaces/Results";
+import { UserLevel, Status } from "../../interfaces/Results";
 import { MongoDBConnector } from "../../DBConnectors/MongoDBConnector";
+import { MariaDBConnector } from "../../DBConnectors/MariaDBConnector";
 
 export class UserRoute extends Route {
 
@@ -22,6 +23,20 @@ export class UserRoute extends Route {
                 }, function(err){
                     UserRoute.sendFailureResponse("Fehler beim Ermitteln der verfügbaren Nutzer", err, response);
                 });
+        });
+
+        this.app.post('/users/register/', (request: Request, response: Response) => {
+            var id = request.body.id;
+            var password = request.body.password;
+            var level = request.body.level;
+            MariaDBConnector.createUser(id, password)
+            .then(MongoDBConnector.saveUser(id, level))    
+            .then(function(result){
+                UserRoute.sendSuccessResponse(result, response);
+            }, function(err){
+                UserRoute.sendFailureResponse("Registrierung fehlgeschlagen", err, response);
+            });
+
         });
     }
 
