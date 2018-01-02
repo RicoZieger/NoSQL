@@ -36,10 +36,10 @@ export class MongoDBConnector {
         return promise;
     }
 
-    public static saveUser(Id: string): any {
+    public static saveUser(Id: string, level: string): any {
         let User = new MongoUser ({
             _id: Id,
-            UserTyp: UserLevel.STUDENT
+            UserTyp: level
         });
         User.
         save((err) => {

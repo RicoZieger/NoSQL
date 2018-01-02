@@ -28,8 +28,9 @@ export class UserRoute extends Route {
         this.app.post('/users/register/', (request: Request, response: Response) => {
             var id = request.body.id;
             var password = request.body.password;
+            var level = request.body.level;
             MariaDBConnector.createUser(id, password)
-            .then(MongoDBConnector.saveUser)    
+            .then(MongoDBConnector.saveUser(id, level))    
             .then(function(result){
                 UserRoute.sendSuccessResponse(result, response);
             }, function(err){
