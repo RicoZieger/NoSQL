@@ -17,9 +17,11 @@ export class MariaDBConnector {
             .getConnection((error: MysqlError, connection: PoolConnection) => {
                 connection.query(query, [Id, passwort], (error, results, fields) => {
                     connection.release();
-                    if (error || results.length === 0) {
-                        return deferred.reject();
-                    } else {
+                    if (error) {
+                        return deferred.reject(error);
+                    } else if(results.length === 0){
+                        return deferred.reject(null);
+                    }else {
                         return deferred.resolve(results[0].Id);
                     }
                 })
@@ -35,7 +37,7 @@ export class MariaDBConnector {
             connection.query(query,[Id, Password], (error, results) => {
                 connection.release();
                 if (error) {
-                    return deferred.reject();
+                    return deferred.reject(error);
                 }else {
                     return  deferred.resolve(Id);
                 }

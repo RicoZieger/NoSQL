@@ -44,7 +44,7 @@ export class LoginRoute extends Route{
                   }
                   return deferred.resolve(result.save());
               }else{
-                  return deferred.reject();
+                  return deferred.reject(err);
               }
           });
 

@@ -114,7 +114,7 @@ export class QuizRoute extends Route {
             if(doc != null)
                 return deferred.resolve(doc.save());
             else
-                return deferred.reject();
+                return deferred.reject(err);
          });
 
         return deferred.promise;
