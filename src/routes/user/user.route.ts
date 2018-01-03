@@ -37,7 +37,7 @@ export class UserRoute extends Route {
 
             MariaDBConnector.createUser(id, password)
             .then(function (val){
-                return new MongoUser({_id: id, UserTyp: level, Kurse: null, Testergebnisse: null}).save();
+                return new MongoUser({_id: id, UserTyp: level, Kurse: [], Testergebnisse: []}).save();
             })
             .then(function(result){
                 UserRoute.sendSuccessResponse("Registrierung erfolgreich", response);
