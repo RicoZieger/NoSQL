@@ -13,6 +13,7 @@ import filesystem = require('fs');
 export class DocumentRoute extends Route {
 
     getRoutes(): void {
+        //TODO Nur Studenten den Download gestatten, die in dem zu den Dateien zugehörigen Kurs eingeschrieben sind
         this.app.get('/file/:fileId', (request: Request, response: Response) => {
 
             //TODO Dateiname aus Metadaten einlesen
