@@ -54,16 +54,20 @@ export class CourseRoute extends Route {
         });
 
         // liefert eine Liste an Kursmetadaten (Titel und id) für den angegebenen Nutzer
-        //TODO prüfen, ob der user mit der angegebenen Id die Berechtigung dazu hat
+        //NOTE Jeder Nutzer mit gültigem Token ist berechtigt, auch wenn nur Admins diesen Aufruf machen werden.
         this.app.get('/users/:userId/courses', (request: Request, response: Response) =>{
             const userId: string = request.params.userId;
-            MongoDBConnector.getUserById(userId)
-                .then(CourseRoute.assembleUserCourses)
-                .then(function(result){
-                    CourseRoute.sendSuccessResponse(result, response);
-                }, function(err){
-                    CourseRoute.sendFailureResponse("Fehler bei der Kursabfrage", err, response);
-                });
+            CourseRoute.isTokenValid(userId, request.header('request-token'))
+            .then(function(isValid){
+                return userId;
+            })
+            .then(MongoDBConnector.getUserById)
+            .then(CourseRoute.assembleUserCourses)
+            .then(function(result){
+                CourseRoute.sendSuccessResponse(result, response);
+            }, function(err){
+                CourseRoute.sendFailureResponse("Fehler bei der Kursabfrage", err, response);
+            });
         });
 
         //legt einen neuen Kurs an
