@@ -5,6 +5,7 @@ import { IDateiModel, MongoDatei } from "../models/Datei";
 import { IKursModel, MongoKurs } from "../models/Kurs";
 import { ITestModel, MongoTest } from "../models/Test";
 import { IFrageModel, MongoFrage } from "../models/Frage";
+import { ITokenModel, MongoToken } from "../models/Token";
 import { ITestergebnisModel, MongoTestergebnis } from "../models/Testergebnis";
 import fs = require('fs');
 import Grid = require('gridfs-stream');
@@ -117,5 +118,11 @@ export class MongoDBConnector {
         const promise = query.exec();
         return promise;
     }
+
+    public static getTokenForUser(Id: string): Promise<ITokenModel> {
+        const query = MongoToken.findOne({_id :Id})
+        const promise = query.exec();
+        return promise;
+    }   
 
 }

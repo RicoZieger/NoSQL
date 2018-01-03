@@ -4,58 +4,67 @@ import { Question, Quiz, QuizResult } from "../../interfaces/Results";
 import { MongoDBConnector } from "../../DBConnectors/MongoDBConnector";
 import { ITestModel, MongoTest } from "../../models/Test";
 import { IFrageModel } from "../../models/Frage";
+import { IUserModel } from "../../models/User";
 import { ITestergebnisModel, MongoTestergebnis } from "../../models/Testergebnis";
 
 export class QuizRoute extends Route {
 
     getRoutes(): void {
         //liefert den angegebenen Tests
-        //TODO prüfen, ob der angegebene Nutzer eine Berechtigung hat
+        //NOTE Nur Studenten, die in den Kurs eingeschrieben sind, zu dem der Test gehört, sind berechtigt.
         this.app.get('/users/:userId/quizs/:quizId', (request: Request, response: Response) => {
             const userId = request.params.userId;
             const quizId = request.params.quizId;
             let testModel: ITestModel;
 
-            MongoDBConnector.getTestById(quizId)
-                .then(function(quiz){
-                    testModel = quiz;
-                    return quiz;
-                })
-                .then(QuizRoute.getAllQuestions)
-                .then(function(questions){
-                    let quizResult: Quiz = QuizRoute.assembleQuiz(questions, testModel);
-                    QuizRoute.sendSuccessResponse(quizResult, response);
-                },function(err){
-                    QuizRoute.sendFailureResponse("Fehler beim Laden des Tests", err, response);
-                });
+            QuizRoute.hasUserAccessToQuizDetails(userId, request.header('request-token'), quizId)
+            .then(function(hasAccess){
+                return quizId;
+            })
+            .then(MongoDBConnector.getTestById)
+            .then(function(quiz){
+                testModel = quiz;
+                return quiz;
+            })
+            .then(QuizRoute.getAllQuestions)
+            .then(function(questions){
+                let quizResult: Quiz = QuizRoute.assembleQuiz(questions, testModel);
+                QuizRoute.sendSuccessResponse(quizResult, response);
+            },function(err){
+                QuizRoute.sendFailureResponse("Fehler beim Laden des Tests", err, response);
+            });
         });
 
         // legt ein Testergebnis für den angegebenen Nutzer an
-        // TODO prüfen, ob der angegebene Nutzer die Berechtigung dazu hat
+        // TODO Nur Studenten, die zu diesem Test noch kein Testergebnis haben, sind berechtigt.
         this.app.post('/users/:userId/quizs', (request: Request, response: Response) =>{
             const userId = request.params.userId;
             const quizResult: QuizResult = request.body as QuizResult;
 
-            MongoDBConnector.getTestById(quizResult.quizId)
-                .then(QuizRoute.getAllQuestions)
-                .then(function(questions: IFrageModel[]){
-                    let testergebnisModel: ITestergebnisModel = QuizRoute.assembleTestergebnisModel(quizResult, questions, userId);
-                    testergebnisModel.save()
-                        .then(function(value){
-                            QuizRoute.updateUserTests(userId, quizResult.quizId)
-                                .then(function(success){
-                                    QuizRoute.sendSuccessResponse("Das Testergebnis wurde erfolgreich angelegt", response);
-                                },
-                                function(err){
-                                    testergebnisModel.remove();
-                                    QuizRoute.sendFailureResponse("Fehler beim Speichern des Testergebnisses", err, response);
-                                });
-                        }, function(err){
-                            QuizRoute.sendFailureResponse("Fehler beim Speichern des Testergebnisses", err, response);
-                        });
+            QuizRoute.hasUserAccessToCreateQuizResult(userId, request.header('request-token'), quizResult.quizId)
+            .then(function(hasAccess){
+                return quizResult.quizId;
+            })
+            .then(MongoDBConnector.getTestById)
+            .then(QuizRoute.getAllQuestions)
+            .then(function(questions: IFrageModel[]){
+                let testergebnisModel: ITestergebnisModel = QuizRoute.assembleTestergebnisModel(quizResult, questions, userId);
+                testergebnisModel.save()
+                .then(function(value){
+                    QuizRoute.updateUserTests(userId, quizResult.quizId)
+                    .then(function(success){
+                        QuizRoute.sendSuccessResponse("Das Testergebnis wurde erfolgreich angelegt", response);
+                    },
+                    function(err){
+                        testergebnisModel.remove();
+                        QuizRoute.sendFailureResponse("Fehler beim Speichern des Testergebnisses", err, response);
+                    });
                 }, function(err){
-                    QuizRoute.sendFailureResponse("Fehler beim Abfragen der Testergebnisse", err, response);
+                    QuizRoute.sendFailureResponse("Fehler beim Speichern des Testergebnisses", err, response);
                 });
+            }, function(err){
+                QuizRoute.sendFailureResponse("Fehler beim Abfragen der Testergebnisse", err, response);
+            });            
         });
     }
 
@@ -116,6 +125,50 @@ export class QuizRoute extends Route {
             else
                 return deferred.reject(err);
          });
+
+        return deferred.promise;
+    }
+
+    private static hasUserAccessToQuizDetails(userId: string, token: string, quizId: string): Promise<boolean> {
+        const deferred = require('q').defer();
+
+        QuizRoute.isTokenValid(userId, token)
+        .then(function(isTokenValid){
+            return userId;
+        })
+        .then(QuizRoute.isUserStudent)
+        .then(function(isStudent){
+            return userId;
+        })
+        .then(MongoDBConnector.getUserById)
+        .then(function(user){
+            return (user.Kurse[0] === quizId.substring(0, quizId.indexOf("_"))) ? deferred.resolve(true) :
+                deferred.reject("Keine Berechtigung");
+        }, function(err){
+            deferred.reject(err);
+        });
+
+        return deferred.promise;
+    }
+
+    private static hasUserAccessToCreateQuizResult(userId: string, token: string, quizId: string): Promise<boolean> {
+        const deferred = require('q').defer();
+
+        QuizRoute.isTokenValid(userId, token)
+        .then(function(isTokenValid){
+            return userId;
+        })
+        .then(QuizRoute.isUserStudent)
+        .then(function(isStudent){
+            return userId;
+        })
+        .then(MongoDBConnector.getUserById)
+        .then(function(user){
+            return (user.Testergebnisse.indexOf(quizId+"_Ergebnis_"+userId) === -1 ) ? deferred.resolve(true) :
+                deferred.reject("Keine Berechtigung");
+        }, function(err){
+            deferred.reject(err);
+        });
 
         return deferred.promise;
     }

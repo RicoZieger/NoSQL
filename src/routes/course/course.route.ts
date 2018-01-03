@@ -17,7 +17,7 @@ export class CourseRoute extends Route {
 
     getRoutes(): void {
         //liefert die Details zu dem angegebenen Kurs
-        //TODO prüfen, ob der user mit der angegebenen Id die Berechtigung dazu hat
+        //NOTE Nur Nutzer, die auch in den Kurs eingeschrieben sind, sind berechtigt.
         this.app.get('/users/:userId/courses/:courseId', (request: Request, response: Response) => {
             const userId = request.params.userId;
             const courseId: string = request.params.courseId;
@@ -25,61 +25,76 @@ export class CourseRoute extends Route {
             let topics: IThemaModel[] = [];
             let tests: ITestModel[] = [];
 
-            MongoDBConnector.getCourseById(courseId)
-                .then(function(courseResult){
-                    course = courseResult;
-                    return courseResult.Tests;
-                })
-                .then(MongoDBConnector.getTestsByIds)
-                .then(function(testsResult){
-                    tests = testsResult;
-                    return course.Themen;
-                })
-                .then(MongoDBConnector.getTopicsByIds)
-                .then(function(topicsResult){
-                    topics = topicsResult;
-                    return topicsResult;
-                })
-                .then(CourseRoute.getAllFilesOfAllCourseTopics)
-                .then(function (files) {
-                    let result: CourseResult = CourseRoute.assembleCourseResult(course, tests, topics, files);
-                    CourseRoute.sendSuccessResponse(result, response);
-                }, function (err) {
-                    CourseRoute.sendFailureResponse("Fehler beim Laden des Kurses", err, response);
-                });
+            CourseRoute.hasUserAccessToCourseDetails(userId, request.header('request-token'), courseId)
+            .then(function(hasAccess){
+                return courseId;
+            })
+            .then(MongoDBConnector.getCourseById)
+            .then(function(courseResult){
+                course = courseResult;
+                return courseResult.Tests;
+            })
+            .then(MongoDBConnector.getTestsByIds)
+            .then(function(testsResult){
+                tests = testsResult;
+                return course.Themen;
+            })
+            .then(MongoDBConnector.getTopicsByIds)
+            .then(function(topicsResult){
+                topics = topicsResult;
+                return topicsResult;
+            })
+            .then(CourseRoute.getAllFilesOfAllCourseTopics)
+            .then(function (files) {
+                let result: CourseResult = CourseRoute.assembleCourseResult(course, tests, topics, files);
+                CourseRoute.sendSuccessResponse(result, response);
+            }, function (err) {
+                CourseRoute.sendFailureResponse("Fehler beim Laden des Kurses", err, response);
+            });
         });
 
         // liefert eine Liste an Kursmetadaten (Titel und id) für den angegebenen Nutzer
-        //TODO prüfen, ob der user mit der angegebenen Id die Berechtigung dazu hat
+        //NOTE Jeder Nutzer mit gültigem Token ist berechtigt, auch wenn nur Admins diesen Aufruf machen werden.
         this.app.get('/users/:userId/courses', (request: Request, response: Response) =>{
             const userId: string = request.params.userId;
-            MongoDBConnector.getUserById(userId)
-                .then(CourseRoute.assembleUserCourses)
-                .then(function(result){
-                    CourseRoute.sendSuccessResponse(result, response);
-                }, function(err){
-                    CourseRoute.sendFailureResponse("Fehler bei der Kursabfrage", err, response);
-                });
+            CourseRoute.isTokenValid(userId, request.header('request-token'))
+            .then(function(isValid){
+                return userId;
+            })
+            .then(MongoDBConnector.getUserById)
+            .then(CourseRoute.assembleUserCourses)
+            .then(function(result){
+                CourseRoute.sendSuccessResponse(result, response);
+            }, function(err){
+                CourseRoute.sendFailureResponse("Fehler bei der Kursabfrage", err, response);
+            });
         });
 
         //legt einen neuen Kurs an
-        //TODO prüfen, ob der user mit der angegebenen Id die Berechtigung dazu hat
-        //TODO error handling ? Alles zurück setzen?
+        //NOTE Nur Admins sind berechtigt
         this.app.post('/users/:userId/courses', (request: Request, response: Response) => {
             let data: NewCourse = request.body as NewCourse;
 
-            MongoDBConnector.getCourseById(data.name)
-                .then(function (result) {
-                    if (result === null) {
-                        let newCourse = CourseRoute.createCourseRecursively(data);
-                        newCourse.save();
-                        CourseRoute.sendSuccessResponse("Kurs angelegt", response);
-                    } else {
-                        CourseRoute.sendFailureResponse("Ein Kurs mit diesem Namen existiert bereits", null, response);
-                    }
-                }, function (err) {
-                    CourseRoute.sendFailureResponse("Fehler beim Abfragen der bestehenden Kurse", err, response);
-                });
+            CourseRoute.isTokenValid(request.params.userId, request.header('request-token'))
+            .then(function(isTokenValid){
+                return request.params.userId;
+            })
+            .then(CourseRoute.isUserAdmin)
+            .then(function(isAdmin){
+                return data.name;
+            })
+            .then(MongoDBConnector.getCourseById)
+            .then(function (result) {
+                if (result === null) {
+                    let newCourse = CourseRoute.createCourseRecursively(data);
+                    newCourse.save();
+                    CourseRoute.sendSuccessResponse("Kurs angelegt", response);
+                } else {
+                    CourseRoute.sendFailureResponse("Ein Kurs mit diesem Namen existiert bereits", null, response);
+                }
+            }, function (err) {
+                CourseRoute.sendFailureResponse("Fehler beim Abfragen der bestehenden Kurse", err, response);
+            });
         });
     }
 
@@ -269,6 +284,23 @@ export class CourseRoute extends Route {
         }
 
         return MongoDBConnector.getFilesMetadataByIds(fileIds);
+    }
+
+    private static hasUserAccessToCourseDetails(userId: string, token: string, courseId: string): Promise<boolean> {
+        const deferred = require('q').defer();
+
+        CourseRoute.isTokenValid(userId, token)
+        .then(function(isTokenValid){
+            return userId;
+        })
+        .then(MongoDBConnector.getUserById)
+        .then(function(user){
+            return (user.Kurse.indexOf(courseId) > -1) ? deferred.resolve(true) : deferred.reject("Keine Berechtigung");
+        }, function(err){
+            deferred.reject(err);
+        });
+
+        return deferred.promise;
     }
 
 }

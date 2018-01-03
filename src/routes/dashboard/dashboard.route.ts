@@ -9,21 +9,26 @@ export class DashboardRoute extends Route {
 
     public getRoutes(): void {
         //returns the test results for all students in the given course/quiz)
-        //TODO prüfen ob der angegebene Nutzer die Berechtigung hat
+        //NOTE Nur Admins, die in den zum angegebenen Test zugehörigen Kurs eingeschrieben sind, sind berechtigt.
         this.app.get('/dashboards/users/:userId/courses/:courseId/quizs/:quizId', (request: Request, response: Response) => {
             let testresults: ITestergebnisModel[] = [];
 
-            MongoDBConnector.getAllTestresultsOfTest(request.params.quizId)
-                .then(function(value){
-                    testresults = value;
-                    return request.params.courseId;
-                })
-                .then(MongoDBConnector.getAllStudentsOfCourse)
-                .then(function(students){
-                    DashboardRoute.sendSuccessResponse(DashboardRoute.assembleQuizUserResult(students, testresults), response);
-                }, function(err){
-                    DashboardRoute.sendFailureResponse("Fehler beim Laden der Testergebnisse", err, response);
-                });
+            DashboardRoute.hasUserAccessToDashboard(request.params.userId, request.header('request-token'),
+            request.params.quizId)
+            .then(function(hasAccess){
+                return request.params.quizId;
+            })
+            .then(MongoDBConnector.getAllTestresultsOfTest)
+            .then(function(value){
+                testresults = value;
+                return request.params.courseId;
+            })
+            .then(MongoDBConnector.getAllStudentsOfCourse)
+            .then(function(students){
+                DashboardRoute.sendSuccessResponse(DashboardRoute.assembleQuizUserResult(students, testresults), response);
+            }, function(err){
+                DashboardRoute.sendFailureResponse("Fehler beim Laden der Testergebnisse", err, response);
+            });
         });
     }
 
@@ -41,6 +46,28 @@ export class DashboardRoute extends Route {
         }
 
         return result;
+    }
+
+    private static hasUserAccessToDashboard(userId: string, token: string, quizId: string): Promise<boolean> {
+        const deferred = require('q').defer();
+
+        DashboardRoute.isTokenValid(userId, token)
+        .then(function(isTokenValid){
+            return userId;
+        })
+        .then(DashboardRoute.isUserAdmin)
+        .then(function(isAdmin){
+            return userId;
+        })
+        .then(MongoDBConnector.getUserById)
+        .then(function(user){
+            return (user.Kurse.indexOf(quizId.substring(0, quizId.indexOf("_"))) > -1 ) ? deferred.resolve(true) :
+                deferred.reject("Keine Berechtigung");
+        }, function(err){
+            deferred.reject(err);
+        });
+
+        return deferred.promise;
     }
 
 }
