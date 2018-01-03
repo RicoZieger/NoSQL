@@ -36,31 +36,35 @@ export class QuizRoute extends Route {
         });
 
         // legt ein Testergebnis für den angegebenen Nutzer an
-        // TODO prüfen, ob der angegebene Nutzer die Berechtigung dazu hat
+        // TODO Nur Studenten, die zu diesem Test noch kein Testergebnis haben, sind berechtigt.
         this.app.post('/users/:userId/quizs', (request: Request, response: Response) =>{
             const userId = request.params.userId;
             const quizResult: QuizResult = request.body as QuizResult;
 
-            MongoDBConnector.getTestById(quizResult.quizId)
-                .then(QuizRoute.getAllQuestions)
-                .then(function(questions: IFrageModel[]){
-                    let testergebnisModel: ITestergebnisModel = QuizRoute.assembleTestergebnisModel(quizResult, questions, userId);
-                    testergebnisModel.save()
-                        .then(function(value){
-                            QuizRoute.updateUserTests(userId, quizResult.quizId)
-                                .then(function(success){
-                                    QuizRoute.sendSuccessResponse("Das Testergebnis wurde erfolgreich angelegt", response);
-                                },
-                                function(err){
-                                    testergebnisModel.remove();
-                                    QuizRoute.sendFailureResponse("Fehler beim Speichern des Testergebnisses", err, response);
-                                });
-                        }, function(err){
-                            QuizRoute.sendFailureResponse("Fehler beim Speichern des Testergebnisses", err, response);
-                        });
+            QuizRoute.hasUserAccessToCreateQuizResult(userId, request.header('request-token'), quizResult.quizId)
+            .then(function(hasAccess){
+                return quizResult.quizId;
+            })
+            .then(MongoDBConnector.getTestById)
+            .then(QuizRoute.getAllQuestions)
+            .then(function(questions: IFrageModel[]){
+                let testergebnisModel: ITestergebnisModel = QuizRoute.assembleTestergebnisModel(quizResult, questions, userId);
+                testergebnisModel.save()
+                .then(function(value){
+                    QuizRoute.updateUserTests(userId, quizResult.quizId)
+                    .then(function(success){
+                        QuizRoute.sendSuccessResponse("Das Testergebnis wurde erfolgreich angelegt", response);
+                    },
+                    function(err){
+                        testergebnisModel.remove();
+                        QuizRoute.sendFailureResponse("Fehler beim Speichern des Testergebnisses", err, response);
+                    });
                 }, function(err){
-                    QuizRoute.sendFailureResponse("Fehler beim Abfragen der Testergebnisse", err, response);
+                    QuizRoute.sendFailureResponse("Fehler beim Speichern des Testergebnisses", err, response);
                 });
+            }, function(err){
+                QuizRoute.sendFailureResponse("Fehler beim Abfragen der Testergebnisse", err, response);
+            });            
         });
     }
 
@@ -139,6 +143,28 @@ export class QuizRoute extends Route {
         .then(MongoDBConnector.getUserById)
         .then(function(user){
             return (user.Kurse[0] === quizId.substring(0, quizId.indexOf("_"))) ? deferred.resolve(true) :
+                deferred.reject("Keine Berechtigung");
+        }, function(err){
+            deferred.reject(err);
+        });
+
+        return deferred.promise;
+    }
+
+    private static hasUserAccessToCreateQuizResult(userId: string, token: string, quizId: string): Promise<boolean> {
+        const deferred = require('q').defer();
+
+        QuizRoute.isTokenValid(userId, token)
+        .then(function(isTokenValid){
+            return userId;
+        })
+        .then(QuizRoute.isUserStudent)
+        .then(function(isStudent){
+            return userId;
+        })
+        .then(MongoDBConnector.getUserById)
+        .then(function(user){
+            return (user.Testergebnisse.indexOf(quizId+"_Ergebnis_"+userId) === -1 ) ? deferred.resolve(true) :
                 deferred.reject("Keine Berechtigung");
         }, function(err){
             deferred.reject(err);
