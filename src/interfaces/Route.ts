@@ -53,7 +53,15 @@ export abstract class Route {
         return deferred.promise;
     }
 
-    protected static isUserAdmin(userId: string) : Promise<boolean> {
+    protected static isUserAdmin(userId: string): Promise<boolean> {
+        return Route.isUserOfType(userId, UserLevel.PROFESSOR);
+    }
+
+    protected static isUserStudent(userId: string): Promise<boolean> {
+        return Route.isUserOfType(userId, UserLevel.STUDENT);
+    }
+
+    private static isUserOfType(userId: string, type: UserLevel) : Promise<boolean> {
         const deferred = require('q').defer();
 
         MongoUser.findOne({_id: userId}, function(err, res){
@@ -63,7 +71,7 @@ export abstract class Route {
                 if(res === null){
                     return deferred.reject("Nutzer "+userId+" existiert nicht");
                 }
-                return res.UserTyp === UserLevel.PROFESSOR ? deferred.resolve(true) :
+                return res.UserTyp === type ? deferred.resolve(true) :
                     deferred.reject("Keine Berechtigung");
             }
         });
