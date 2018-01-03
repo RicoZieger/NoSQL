@@ -71,23 +71,30 @@ export class CourseRoute extends Route {
         });
 
         //legt einen neuen Kurs an
-        //TODO prüfen, ob der user mit der angegebenen Id die Berechtigung dazu hat
-        //TODO error handling ? Alles zurück setzen?
+        //NOTE Nur Admins sind berechtigt
         this.app.post('/users/:userId/courses', (request: Request, response: Response) => {
             let data: NewCourse = request.body as NewCourse;
 
-            MongoDBConnector.getCourseById(data.name)
-                .then(function (result) {
-                    if (result === null) {
-                        let newCourse = CourseRoute.createCourseRecursively(data);
-                        newCourse.save();
-                        CourseRoute.sendSuccessResponse("Kurs angelegt", response);
-                    } else {
-                        CourseRoute.sendFailureResponse("Ein Kurs mit diesem Namen existiert bereits", null, response);
-                    }
-                }, function (err) {
-                    CourseRoute.sendFailureResponse("Fehler beim Abfragen der bestehenden Kurse", err, response);
-                });
+            CourseRoute.isTokenValid(request.params.userId, request.header('request-token'))
+            .then(function(isTokenValid){
+                return request.params.userId;
+            })
+            .then(CourseRoute.isUserAdmin)
+            .then(function(isAdmin){
+                return data.name;
+            })
+            .then(MongoDBConnector.getCourseById)
+            .then(function (result) {
+                if (result === null) {
+                    let newCourse = CourseRoute.createCourseRecursively(data);
+                    newCourse.save();
+                    CourseRoute.sendSuccessResponse("Kurs angelegt", response);
+                } else {
+                    CourseRoute.sendFailureResponse("Ein Kurs mit diesem Namen existiert bereits", null, response);
+                }
+            }, function (err) {
+                CourseRoute.sendFailureResponse("Fehler beim Abfragen der bestehenden Kurse", err, response);
+            });
         });
     }
 
