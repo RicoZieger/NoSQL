@@ -17,7 +17,8 @@
     "mime-types": "^2.1.17",
     "mongoose": "^4.13.7",
     "mysql": "^2.15.0",
-    "q": "^1.5.1"
+    "q": "^1.5.1",
+    "ts-md5": "^1.2.2"
   },
   "devDependencies": {
     "@types/body-parser": "^1.16.8",
