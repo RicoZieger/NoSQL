@@ -61,7 +61,7 @@ export class DashboardRoute extends Route {
         })
         .then(MongoDBConnector.getUserById)
         .then(function(user){
-            return (user.Kurse[0] === quizId.substring(0, quizId.indexOf("_"))) ? deferred.resolve(true) :
+            return (user.Kurse.indexOf(quizId.substring(0, quizId.indexOf("_"))) > -1 ) ? deferred.resolve(true) :
                 deferred.reject("Keine Berechtigung");
         }, function(err){
             deferred.reject(err);
