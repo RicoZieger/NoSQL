@@ -9,6 +9,7 @@ import { DashboardRoute } from "./routes/dashboard/dashboard.route";
 import { QuizRoute } from "./routes/quiz/quiz.route";
 import { MongoDBConnector } from "./DBConnectors/MongoDBConnector";
 import { MariaDBConnector } from "./DBConnectors/MariaDBConnector";
+import cors = require('cors');
 
 console.log('MongoDB', process.env.MONGO_DB);
 console.log('MySQL', process.env.MY_SQL);
@@ -16,23 +17,12 @@ console.log('MySQL', process.env.MY_SQL);
 const app = express();
 app.use(bodyParser.json()); // support JSON-encoded bodies
 app.use(function (req, res, next) {
-
-    // Website you wish to allow to connect
-    res.setHeader('Access-Control-Allow-Origin', '*');
-
-    // Request methods you wish to allow
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-
-    // Request headers you wish to allow
-    res.setHeader('Access-Control-Allow-Headers', '*');
-
-    // Set to true if you need the website to include cookies in the requests sent
-    // to the API (e.g. in case you use sessions)
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-
-    // Pass to next layer of middleware
     next();
 });
+
+//enable cors and pre-flight check
+app.use(cors());
+app.options('*', cors());
 
 app.get('/', (request: Request, response: Response) => {
     response.setHeader('Content-Type', 'application/json');
