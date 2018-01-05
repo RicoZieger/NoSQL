@@ -4,19 +4,13 @@ import { MongoDBConnector } from "../../DBConnectors/MongoDBConnector";
 import mime = require('mime-types');
 import filesystem = require('fs');
 
-
-/*
-    NOTE
-    This class exists only for test purposes and might not be consistent when it comes to coding and/or naming
-    conventions.
-*/
 export class DocumentRoute extends Route {
 
     getRoutes(): void {
         //NOTE Nur Studenten, die in dem zu den Dateien zugehörigen Kurs eingeschrieben sind, sind berechtigt
-        this.app.get('users/:userId/courses/:courseId/files/:fileId', (request: Request, response: Response) => {
-
-            DocumentRoute.isTokenValid(request.params.userId, request.header('request-token'))
+        //NOTE Da der Download im Frontend nur über ein href möglich ist, muss der token in der URL übergeben werden
+        this.app.get('/users/:userId/courses/:courseId/files/:fileId/token/:tokenId', (request: Request, response: Response) => {
+            DocumentRoute.isTokenValid(request.params.userId, request.params.tokenId)
             .then(function(isValid){
                 return request.params.userId;
             })
@@ -45,7 +39,7 @@ export class DocumentRoute extends Route {
                         if(err){
                             DocumentRoute.sendFailureResponse("Datei konnte zur Weiterverarbeitung nicht zwischengespeichert werden", err, response);
                         }else{
-                            response.download(tmpFileName, "Dateiname_aus_Metadaten.pdf", function(err){
+                            response.download(tmpFileName, file.Titel, function(err){
                                 if(err){
                                     DocumentRoute.sendFailureResponse("Fehler beim Herunterladen der Datei", err, response);
                                 }
@@ -59,6 +53,11 @@ export class DocumentRoute extends Route {
             });
         });
 
+        /*
+            NOTE
+            This method exists only for test purposes and might not be consistent when it comes to coding and/or naming
+            conventions.
+        */
         this.app.post('/file/:filename', (request: Request, response: Response) => {
             const upload = request.body;
             const filename = request.params.filename;
