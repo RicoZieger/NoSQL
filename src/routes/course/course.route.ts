@@ -24,9 +24,15 @@ export class CourseRoute extends Route {
             let course: IKursModel;
             let topics: IThemaModel[] = [];
             let tests: ITestModel[] = [];
+            let user : IUserModel;
 
             CourseRoute.hasUserAccessToCourseDetails(userId, request.header('request-token'), courseId)
             .then(function(hasAccess){
+                return userId;;
+            })
+            .then(MongoDBConnector.getUserById)
+            .then(function(userResult){
+                user = userResult;
                 return courseId;
             })
             .then(MongoDBConnector.getCourseById)
@@ -46,7 +52,7 @@ export class CourseRoute extends Route {
             })
             .then(CourseRoute.getAllFilesOfAllCourseTopics)
             .then(function (files) {
-                let result: CourseResult = CourseRoute.assembleCourseResult(course, tests, topics, files);
+                let result: CourseResult = CourseRoute.assembleCourseResult(user, course, tests, topics, files);
                 CourseRoute.sendSuccessResponse(result, response);
             }, function (err) {
                 CourseRoute.sendFailureResponse("Fehler beim Laden des Kurses", err, response);
@@ -224,7 +230,7 @@ export class CourseRoute extends Route {
         }
     }
 
-    private static assembleCourseResult(course: IKursModel, tests: ITestModel[], topics: IThemaModel[],
+    private static assembleCourseResult(user: IUserModel, course: IKursModel, tests: ITestModel[], topics: IThemaModel[],
         files: IDateiModel[]): CourseResult {
         const courseResult: CourseResult = new CourseResult(course._id, course.Titel);
         const courseTopics: Topic[] = new Array(topics.length);
@@ -233,7 +239,8 @@ export class CourseRoute extends Route {
         let now: Date = new Date();
 
         for (let quizCounter = 0; quizCounter < tests.length; quizCounter++) {
-            if (CourseRoute.isFileInVisibleNow(tests[quizCounter].Anfangsdatum, tests[quizCounter].Ablaufdatum)) {
+            if (CourseRoute.isFileInVisibleNow(tests[quizCounter].Anfangsdatum, tests[quizCounter].Ablaufdatum) &&
+                (user.Testergebnisse.indexOf((tests[quizCounter]._id+'_Ergebnis_'+user._id)) === -1)) {
                 courseTests.push(new QuizMetadata(tests[quizCounter]._id, tests[quizCounter].Titel));
             }
         }
