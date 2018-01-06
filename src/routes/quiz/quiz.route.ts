@@ -4,7 +4,7 @@ import { Question, Quiz, QuizResult } from "../../interfaces/Results";
 import { MongoDBConnector } from "../../DBConnectors/MongoDBConnector";
 import { ITestModel, MongoTest } from "../../models/Test";
 import { IFrageModel } from "../../models/Frage";
-import { IUserModel } from "../../models/User";
+import { IUserModel, MongoUser } from "../../models/User";
 import { ITestergebnisModel, MongoTestergebnis } from "../../models/Testergebnis";
 
 export class QuizRoute extends Route {
@@ -50,13 +50,16 @@ export class QuizRoute extends Route {
             .then(function(questions: IFrageModel[]){
                 let testergebnisModel: ITestergebnisModel = QuizRoute.assembleTestergebnisModel(quizResult, questions, userId);
                 testergebnisModel.save()
-                .then(function(value){
-                    QuizRoute.updateUserTests(userId, quizResult.quizId)
+                .then(function(success){
+                    QuizRoute.updateQuiz(userId, quizResult.quizId)
                     .then(function(success){
-                        QuizRoute.sendSuccessResponse("Das Testergebnis wurde erfolgreich angelegt", response);
-                    },
-                    function(err){
-                        testergebnisModel.remove();
+                        QuizRoute.updateUser(userId, quizResult.quizId)
+                        .then(function(success){
+                            QuizRoute.sendSuccessResponse("Das Testergebnis wurde erfolgreich angelegt", response);
+                        }, function(err){
+                            QuizRoute.sendFailureResponse("Fehler beim Speichern des Testergebnisses", err, response);
+                        });
+                    }, function(err){
                         QuizRoute.sendFailureResponse("Fehler beim Speichern des Testergebnisses", err, response);
                     });
                 }, function(err){
@@ -117,10 +120,23 @@ export class QuizRoute extends Route {
         return false;
     }
 
-    private static updateUserTests(userId: string, quizId: string): Promise<ITestModel>{
+    private static updateQuiz(userId: string, quizId: string): Promise<ITestModel>{
         const deferred = require('q').defer();
 
          MongoTest.findOneAndUpdate({_id: quizId}, {$push:{AbgeschlossenVon: userId}}, function(err, doc, res){
+            if(doc != null)
+                return deferred.resolve(doc.save());
+            else
+                return deferred.reject(err);
+         });
+
+        return deferred.promise;
+    }
+
+    private static updateUser(userId: string, quizId: string): Promise<ITestModel>{
+        const deferred = require('q').defer();
+
+         MongoUser.findOneAndUpdate({_id: userId}, {$push:{Testergebnisse: (quizId+"_Ergebnis_"+userId)}}, function(err, doc, res){
             if(doc != null)
                 return deferred.resolve(doc.save());
             else
