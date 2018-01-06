@@ -28,16 +28,11 @@ export class UserRoute extends Route {
         });
 
         //legt einen neuen Nutzer an.
-        //NOTE Es wird nicht geprüft, ob bereits ein Nutzer mit dieser Id existiert.
-        //TODO Wird das wieder entfernt? Ansonsten muss noch ne Prüfung rein
         this.app.post('/users/register/', (request: Request, response: Response) => {
-            const id: string = request.body.id;
-            const password: string = request.body.password;
-            const level:string = request.body.level;
-
-            MariaDBConnector.createUser(id, password)
+            MariaDBConnector.createUser(request.body.id, request.body.password)
             .then(function (val){
-                return new MongoUser({_id: id, UserTyp: level, Kurse: [], Testergebnisse: []}).save();
+                return new MongoUser({_id: request.body.id, UserTyp: request.body.level, Kurse: [],
+                    Testergebnisse: []}).save();
             })
             .then(function(result){
                 UserRoute.sendSuccessResponse("Registrierung erfolgreich", response);
