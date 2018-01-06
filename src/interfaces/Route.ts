@@ -44,7 +44,7 @@ export abstract class Route {
                 return deferred.reject(err);
             }else{
                 if(res === null){
-                    return deferred.reject("Unbekannter Token-User");
+                    return deferred.reject("Der Nutzer "+userId+" ist der Zugriffsverwaltung nicht bekannt.");
                 }
                 return res.secret === token ? deferred.resolve(true) : deferred.reject("Token ungültig");
             }
@@ -72,7 +72,8 @@ export abstract class Route {
                     return deferred.reject("Nutzer "+userId+" existiert nicht");
                 }
                 return res.UserTyp === type ? deferred.resolve(true) :
-                    deferred.reject("Keine Berechtigung");
+                    deferred.reject("Der Nutzer ist nicht vom Typ "+type+" und daher nicht zur Durchführung dieser"+
+                        " Anfrage berechtigt.");
             }
         });
 

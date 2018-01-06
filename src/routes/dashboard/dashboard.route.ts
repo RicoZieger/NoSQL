@@ -62,7 +62,8 @@ export class DashboardRoute extends Route {
         .then(MongoDBConnector.getUserById)
         .then(function(user){
             return (user.Kurse.indexOf(quizId.substring(0, quizId.indexOf("_"))) > -1 ) ? deferred.resolve(true) :
-                deferred.reject("Keine Berechtigung");
+                deferred.reject("Der Nutzer ist nicht in den zu diesem Test zugehörigen Kurs eingeschrieben"+
+                 " und daher nicht zur Ansicht der Testergebnisse berechtigt.");
         }, function(err){
             deferred.reject(err);
         });

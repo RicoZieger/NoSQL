@@ -94,7 +94,8 @@ export class QuizRoute extends Route {
             for(let x = 0; x < quizResult.answers.length; x++){
                 if(quizResult.answers[x].questionId === questions[i]._id){
                     for(let t = 0; t < quizResult.answers[x].givenAnswerIndizies.length; t++){
-                        if(QuizRoute.containsArrayNumber(questions[i].KorrekteAntwortenIndex, quizResult.answers[x].givenAnswerIndizies[t])){
+                        if(QuizRoute.containsArrayNumber(questions[i].KorrekteAntwortenIndex,
+                            quizResult.answers[x].givenAnswerIndizies[t])){
                             userPoints++;
                         }
                     }
@@ -143,7 +144,8 @@ export class QuizRoute extends Route {
         .then(MongoDBConnector.getUserById)
         .then(function(user){
             return (user.Kurse[0] === quizId.substring(0, quizId.indexOf("_"))) ? deferred.resolve(true) :
-                deferred.reject("Keine Berechtigung");
+                deferred.reject("Der Nutzer ist nicht in den zu diesem Test gehörigen Kurs eingeschrieben und daher"+
+                    " auch nicht zur Ansicht und Durchführung dieses Tests berechtigt.");
         }, function(err){
             deferred.reject(err);
         });
@@ -165,7 +167,8 @@ export class QuizRoute extends Route {
         .then(MongoDBConnector.getUserById)
         .then(function(user){
             return (user.Testergebnisse.indexOf(quizId+"_Ergebnis_"+userId) === -1 ) ? deferred.resolve(true) :
-                deferred.reject("Keine Berechtigung");
+                deferred.reject("Der Nutzer hat bereits ein Testergebnis zu diesem Test und ist daher nicht zum erneuten"+
+                    " Anlegen eines Testergebnisses berechtigt.");
         }, function(err){
             deferred.reject(err);
         });

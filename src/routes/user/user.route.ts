@@ -47,7 +47,6 @@ export class UserRoute extends Route {
         });
     }
 
-
     private static hasUserAccessToStudentsList(userId: string, token: string): Promise<boolean> {
         return UserRoute.isTokenValid(userId, token)
         .then(function(isValid){

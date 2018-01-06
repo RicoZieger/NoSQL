@@ -190,7 +190,8 @@ export class CourseRoute extends Route {
         newQuiz.AbgeschlossenVon = [];
         newQuiz.Fragen = [];
         for (let i = 0; i < quiz.questions.length; i++) {
-            newQuiz.Fragen.push(CourseRoute.createQuestionRecursively(quiz.questions[i], (newQuiz._id + '_Frage' + i))._id);
+            newQuiz.Fragen.push(CourseRoute.createQuestionRecursively(quiz.questions[i],
+                (newQuiz._id + '_Frage' + i))._id);
         }
 
         newQuiz.save();

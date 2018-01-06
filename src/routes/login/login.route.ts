@@ -7,7 +7,6 @@ import { IUserModel } from "../../models/User";
 import { ITokenModel, MongoToken } from "../../models/Token";
 import { Md5 } from "ts-md5/dist/md5";
 
-
 export class LoginRoute extends Route{
 
     getRoutes(): void {
