@@ -36,7 +36,7 @@ export class QuizRoute extends Route {
         });
 
         // legt ein Testergebnis für den angegebenen Nutzer an
-        // TODO Nur Studenten, die zu diesem Test noch kein Testergebnis haben, sind berechtigt.
+        // NOTE Nur Studenten, die zu diesem Test noch kein Testergebnis haben, sind berechtigt.
         this.app.post('/users/:userId/quizs', (request: Request, response: Response) =>{
             const userId = request.params.userId;
             const quizResult: QuizResult = request.body as QuizResult;

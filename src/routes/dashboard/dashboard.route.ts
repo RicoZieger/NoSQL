@@ -39,7 +39,7 @@ export class DashboardRoute extends Route {
             let tmp = new QuizUserResult(students[i]._id, "Nicht teilgenommen");
             for(let t = 0; t < testresults.length; t++){
                 if(testresults[t].ZugehörigerUser === students[i]._id){
-                    tmp.points = testresults[t].ErreichtePunkte+" Punkte";
+                    tmp.points = testresults[t].ErreichtePunkte  + (testresults[t].ErreichtePunkte> 1?" Punkte":" Punkt");
                 }
             }
             result.push(tmp);
