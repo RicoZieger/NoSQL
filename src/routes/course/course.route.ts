@@ -8,7 +8,7 @@ import { IFrageModel, MongoFrage } from "../../models/Frage";
 import { IUserModel, MongoUser } from "../../models/User";
 import {
     CourseMetadata, CourseResult, FileMetadata, NewCourse, NewFile, NewQuestion, NewQuiz, NewTopic, QuizMetadata,
-    Topic
+    Topic, UserLevel
 } from "../../interfaces/Results";
 import { MongoDBConnector } from "../../DBConnectors/MongoDBConnector";
 import filesystem = require('fs');
@@ -216,9 +216,10 @@ export class CourseRoute extends Route {
         for(let i = 0; i < course.users.length; i++){
             let userId:string = course.users[i];
             MongoUser.findOneAndUpdate({_id: userId}, {$push:{Kurse: courseId}}, function(err, doc, res){
-                //TODO only save if admin or student without orher courses
-                if(doc != null)
+                if(doc != null && ((doc.UserTyp === UserLevel.STUDENT && doc.Kurse.length === 0)
+                    || doc.UserTyp === UserLevel.PROFESSOR)){                    
                     doc.save();
+                }
             });
         }
     }
