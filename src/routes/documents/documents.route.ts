@@ -7,15 +7,11 @@ import filesystem = require('fs');
 export class DocumentRoute extends Route {
 
     getRoutes(): void {
-        //NOTE Nur Studenten, die in dem zu den Dateien zugehörigen Kurs eingeschrieben sind, sind berechtigt
+        //NOTE Nur Nutzer, die in dem zu den Dateien zugehörigen Kurs eingeschrieben sind, sind berechtigt
         //NOTE Da der Download im Frontend nur über ein href möglich ist, muss der token in der URL übergeben werden
-        this.app.get('/users/:userId/courses/:courseId/files/:fileId/token/:tokenId', (request: Request, response: Response) => {
-            DocumentRoute.isTokenValid(request.params.userId, request.params.tokenId)
-            .then(function(isValid){
-                return request.params.userId;
-            })
-            .then(DocumentRoute.isUserStudent)
-            .then(function(isStudent){
+        this.app.get('/users/:userId/courses/:courseId/files/:fileId/token/:tokenId', (request: Request, response: Response) => {            
+            DocumentRoute.hasUserAccessToFile(request.params.userId, request.params.courseId, request.params.tokenId)
+            .then(function(hasAccess){
                 return request.params.fileId;
             })
             .then(MongoDBConnector.getFileMetadataById)
@@ -86,6 +82,24 @@ export class DocumentRoute extends Route {
                 });
             });
         });
+    }
+
+    private static hasUserAccessToFile(userId: string, courseId: string, token: string): Promise<boolean> {
+        const deferred = require('q').defer();
+
+        DocumentRoute.isTokenValid(userId, token)
+        .then(function(isTokenValid){
+            return userId;
+        })
+        .then(MongoDBConnector.getUserById)
+        .then(function(user){
+            return (user.Kurse.indexOf(courseId) > -1) ? deferred.resolve(true) :
+                deferred.reject("Der Nutzer ist nicht in den zu dieser Datei zugehörigen Kurs eingeschrieben.");
+        }, function(err){
+            deferred.reject(err);
+        });
+
+        return deferred.promise;
     }
 
 }
