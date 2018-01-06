@@ -174,7 +174,7 @@ export class CourseRoute extends Route {
         const tmpFileName = "tmp_up_" + filename;
         const id = idPrefix + '_ActualData';
 
-        filesystem.writeFile(tmpFileName, Buffer.from(filedata), function (err) {
+        filesystem.writeFile(tmpFileName, new Buffer(filedata.split(",")[1], 'base64'), function (err) {
             let fileStream = MongoDBConnector.saveFileWithId(id, filename, tmpFileName);
             fileStream.on('close', function (file) {
                 filesystem.unlinkSync(tmpFileName);
