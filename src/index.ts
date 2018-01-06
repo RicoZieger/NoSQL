@@ -15,7 +15,8 @@ console.log('MongoDB', process.env.MONGO_DB);
 console.log('MySQL', process.env.MY_SQL);
 
 const app = express();
-app.use(bodyParser.json()); // support JSON-encoded bodies
+app.use(bodyParser.json({limit: '100mb'}));
+app.use(bodyParser.urlencoded({limit: '100mb', extended: true}));
 app.use(function (req, res, next) {
     next();
 });
