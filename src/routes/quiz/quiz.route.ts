@@ -102,7 +102,7 @@ export class QuizRoute extends Route {
                 }
             }
         }
-        testergebnis.ErreichtePunkte = 10;
+        testergebnis.ErreichtePunkte = userPoints;
 
         return testergebnis;
     }
