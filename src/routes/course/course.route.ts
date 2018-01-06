@@ -304,7 +304,8 @@ export class CourseRoute extends Route {
         })
         .then(MongoDBConnector.getUserById)
         .then(function(user){
-            return (user.Kurse.indexOf(courseId) > -1) ? deferred.resolve(true) : deferred.reject("Keine Berechtigung");
+            return (user.Kurse.indexOf(courseId) > -1) ? deferred.resolve(true) :
+                deferred.reject("Der Nutzer ist nicht in diesen Kurs eingeschrieben");
         }, function(err){
             deferred.reject(err);
         });
