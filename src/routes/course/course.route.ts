@@ -223,7 +223,7 @@ export class CourseRoute extends Route {
             let userId:string = course.users[i];
             MongoUser.findOneAndUpdate({_id: userId}, {$push:{Kurse: courseId}}, function(err, doc, res){
                 if(doc != null && ((doc.UserTyp === UserLevel.STUDENT && doc.Kurse.length === 0)
-                    || doc.UserTyp === UserLevel.PROFESSOR)){                    
+                    || (doc.UserTyp === UserLevel.PROFESSOR && doc.Kurse.indexOf(courseId) === -1))){                    
                     doc.save();
                 }
             });
