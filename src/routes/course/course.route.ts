@@ -126,6 +126,7 @@ export class CourseRoute extends Route {
         let topics: NewTopic[] = course.topics;
         let quizs: NewQuiz[] = course.quizs;
 
+        course.name = course.name.trimRight();
         newCourse._id = course.name;
         newCourse.Titel = course.name;
         newCourse.Themen = [];
