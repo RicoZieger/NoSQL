@@ -280,8 +280,10 @@ export class CourseRoute extends Route {
         let now: Date = new Date();
 
         return ((visibilityStart === null && visibilityEnd === null) ||
-            ((visibilityStart <= now) && (visibilityEnd >= now)));
-    }    
+            (visibilityStart === null && visibilityEnd != null && visibilityEnd >= now) ||
+            (visibilityEnd === null && visibilityStart != null && visibilityStart <= now) ||
+            (visibilityStart != null && visibilityEnd != null && visibilityStart <= now && visibilityEnd >= now));
+    }
 
     private static getAllFilesOfAllCourseTopics(topics: IThemaModel[]): Promise<IDateiModel[]> {
         let fileIds: string[] = [];
