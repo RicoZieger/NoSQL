@@ -244,14 +244,16 @@ export class CourseRoute extends Route {
         let now: Date = new Date();
 
         for (let quizCounter = 0; quizCounter < tests.length; quizCounter++) {
-            if (CourseRoute.isFileInVisibleNow(tests[quizCounter].Anfangsdatum, tests[quizCounter].Ablaufdatum) &&
-                (user.Testergebnisse.indexOf((tests[quizCounter]._id+'_Ergebnis_'+user._id)) === -1)) {
+            if (user.UserTyp === UserLevel.PROFESSOR ||
+                (CourseRoute.isFileInVisibleNow(tests[quizCounter].Anfangsdatum, tests[quizCounter].Ablaufdatum) &&
+                (user.Testergebnisse.indexOf((tests[quizCounter]._id+'_Ergebnis_'+user._id)) === -1))) {
                 courseTests.push(new QuizMetadata(tests[quizCounter]._id, tests[quizCounter].Titel));
             }
         }
 
         for (let fileCounter = 0; fileCounter < files.length; fileCounter++) {
-            if (CourseRoute.isFileInVisibleNow(files[fileCounter].Anfangsdatum, files[fileCounter].Ablaufdatum)) {
+            if (user.UserTyp === UserLevel.PROFESSOR ||
+                (CourseRoute.isFileInVisibleNow(files[fileCounter].Anfangsdatum, files[fileCounter].Ablaufdatum))) {
                 courseFiles.push(new FileMetadata(files[fileCounter]._id, files[fileCounter].Titel,
                     files[fileCounter].gridfsLink));
             }
