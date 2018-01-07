@@ -13,8 +13,8 @@ export interface ITestModel extends Document {
 let testSchema = new mongoose.Schema({
     _id: {type: String},
     Titel: {type: String},
-    Anfangsdatum: {type: String},
-    Ablaufdatum: {type: Number},
+    Anfangsdatum: {type: Date},
+    Ablaufdatum: {type: Date},
     AbgeschlossenVon: [{type: String}],
     Fragen: [{type: String}]
 });
