@@ -112,6 +112,11 @@ export class CourseRoute extends Route {
             for(let i = 0; i < user.Kurse.length; i++){
                 kurse.push(new CourseMetadata(user.Kurse[i], user.Kurse[i]));
             }
+
+            kurse.sort(function(a, b) {
+                return a._id.localeCompare(b._id);
+            });
+
             return kurse;
         }
     }
@@ -266,9 +271,19 @@ export class CourseRoute extends Route {
                 }
             }
 
+            topicFiles.sort(function(a, b) {
+                return a._id.localeCompare(b._id);
+            });
             tmpTopic.files = topicFiles;
             courseTopics[topicCounter] = tmpTopic;
         }
+
+        courseTopics.sort(function(a, b) {
+            return a._id.localeCompare(b._id);
+        });
+        courseTests.sort(function(a, b) {
+            return a._id.localeCompare(b._id);
+        });
 
         courseResult.topics = courseTopics;
         courseResult.quizs = courseTests;

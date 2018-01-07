@@ -45,6 +45,9 @@ export class DashboardRoute extends Route {
             result.push(tmp);
         }
 
+        result.sort(function(a, b) {
+            return a.user_id.localeCompare(b.user_id);
+        });
         return result;
     }
 

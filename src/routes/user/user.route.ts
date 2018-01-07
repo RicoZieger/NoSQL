@@ -21,6 +21,7 @@ export class UserRoute extends Route {
                         result.push(user[i]._id);
                 }
 
+                result.sort();
                 UserRoute.sendSuccessResponse(result, response);
             }, function(err){
                 UserRoute.sendFailureResponse("Fehler beim Ermitteln der verfügbaren Nutzer", err, response);

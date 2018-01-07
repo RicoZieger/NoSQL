@@ -82,6 +82,10 @@ export class QuizRoute extends Route {
             questionArray.push(new Question(questions[i]._id, questions[i].Fragetext, questions[i].Antworten));
         }
 
+        questionArray.sort(function(a, b) {
+            return a._id.localeCompare(b._id);
+        });
+
         return new Quiz(quiz._id, quiz.Titel, questionArray);
     }
 
