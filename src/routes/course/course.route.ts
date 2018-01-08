@@ -127,6 +127,7 @@ export class CourseRoute extends Route {
         let quizs: NewQuiz[] = course.quizs;
 
         course.name = course.name.trimRight();
+        course.name = course.name.replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi,'');
         newCourse._id = course.name;
         newCourse.Titel = course.name;
         newCourse.Themen = [];
